@@ -1,3 +1,5 @@
+from clases_base_abstractas import Subject, Observer
+
 class WeatherData(Subject):
     def __init__(self):
         self._observers = []
@@ -13,9 +15,13 @@ class WeatherData(Subject):
         if observer in self._observers:
             self._observers.remove(observer)
 
-    def notify_observers(self):
+    # def notify_observers(self): # Modelo Push
+    #     for observer in self._observers:
+    #         observer.update(self._temperature, self._humidity, self._pressure)
+            
+    def notify_observers(self): # Modelo Pull
         for observer in self._observers:
-            observer.update(self._temperature, self._humidity, self._pressure)
+            observer.update()
 
     def measurements_changed(self):
         self.notify_observers()

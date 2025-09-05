@@ -13,6 +13,16 @@ class CondimentDecorator(Beverage, ABC):
     """
     def __init__(self, beverage: Beverage):
         self._beverage = beverage
+        
+    def get_size(self) -> str:
+        """
+        Método abstracto que las subclases deben implementar para devolver
+        el tamaño de la bebida.
+        """
+        return self._beverage.get_size()
+    
+    def get_base(self):
+        return self._beverage.get_base()
 
     @abstractmethod
     def get_description(self) -> str:
@@ -47,7 +57,16 @@ class Soy(CondimentDecorator):
         return self._beverage.get_description() + ", Soja"
 
     def cost(self) -> float:
-        return self._beverage.cost() + 0.15
+        size = self._beverage.get_size()
+        if size == 'Tall':
+            costo = 0.10
+        elif size == 'Grande':
+             costo = 0.15
+        elif size == 'Venti': 
+            costo = 0.20
+        else:
+            print('Tamaño no especificado')
+        return self._beverage.cost() + costo
 
 class Whip(CondimentDecorator):
     """
@@ -58,3 +77,13 @@ class Whip(CondimentDecorator):
 
     def cost(self) -> float:
         return self._beverage.cost() + 0.10
+
+class Caramel(CondimentDecorator):
+    """
+    Decorador para añadir Caramelo a una bebida.
+    """
+    def get_description(self) -> str:
+        return self._beverage.get_description() + ", Caramelo"
+
+    def cost(self) -> float:
+        return self._beverage.cost() + 0.05

@@ -11,12 +11,29 @@ class Beverage(ABC):
     """
     def __init__(self):
         self.description = "Bebida Desconocida"
-
+        
     def get_description(self) -> str:
         """
         Devuelve la descripción de la bebida.
         """
         return self.description
+    
+    def set_size(self, size) -> None:
+        """
+        Método abstracto que las subclases deben implementar para setear el 
+        tamaño de la bebida
+        """
+        self._size = size
+    
+    def get_size(self) -> str:
+        """
+        Método abstracto que las subclases deben implementar para devolver
+        el tamaño de la bebida.
+        """
+        return self._size
+    
+    def get_base(self):
+        return self.get_description()
 
     @abstractmethod
     def cost(self) -> float:
@@ -25,6 +42,7 @@ class Beverage(ABC):
         el costo de la bebida.
         """
         pass
+    
 
 # --- Componentes Concretos ---
 class HouseBlend(Beverage):
@@ -56,7 +74,7 @@ class Decaf(Beverage):
 
     def cost(self) -> float:
         return 1.05
-
+    
 class Espresso(Beverage):
     """
     Café Espresso, un tipo específico de bebida.
@@ -66,3 +84,4 @@ class Espresso(Beverage):
 
     def cost(self) -> float:
         return 1.99
+    

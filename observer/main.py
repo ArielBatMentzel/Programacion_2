@@ -1,23 +1,38 @@
+from Subject import WeatherData
+from displays import CurrentConditionsDisplay, StatisticsDisplay, ForecastDisplay
+
+
 def main():
+    print("=== Demo Observer PULL ===")
+
     weather_data = WeatherData()
 
-    current_display = CurrentConditionsDisplay(weather_data)
-    stats_display = StatisticsDisplay(weather_data)
-    forecast_display = ForecastDisplay(weather_data)
+    current = CurrentConditionsDisplay(weather_data)
+    stats = StatisticsDisplay(weather_data)
+    forecast = ForecastDisplay(weather_data)
 
-    print("Weather Station 1.0")
-    print("-------------------")
+    print("\n-- Actualización #1 --")
+    weather_data.set_measurements(26.3, 65, 1013.1)
 
-    weather_data.set_measurements(26.6, 65, 30.4)
-    print("---")
-    weather_data.set_measurements(27.7, 70, 29.2)
-    print("---")
-    weather_data.set_measurements(25.5, 90, 29.2)
+    print("\n-- Actualización #2 --")
+    weather_data.set_measurements(27.8, 70, 1012.4)
 
-    # Ejemplo de desregistro (opcional)
-    # print("\n--- Forecast display unsubscribed ---")
-    # weather_data.remove_observer(forecast_display)
-    # weather_data.set_measurements(28.0, 88, 30.0)
+    print("\n(Remuevo StatisticsDisplay)")
+    weather_data.remove_observer(stats)
+
+    print("\n-- Actualización #3 --")
+    weather_data.set_measurements(25.5, 90, 1009.8)
+
+    print("\n(Vuelvo a agregar StatisticsDisplay)")
+    stats = StatisticsDisplay(weather_data)
+
+    print("\n-- Actualización #4 --")
+    weather_data.set_measurements(23.7, 85, 1011.0)
+
+    print("\n=== Fin de la demo PULL ===")
 
 if __name__ == "__main__":
     main()
+
+
+
