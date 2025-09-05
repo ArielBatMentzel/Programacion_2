@@ -29,6 +29,9 @@ class PrettyPrint(Beverage):
             elemento = elemento.replace(',', '')
             if elemento in CONDIMENTS:
                 CONDIMENTS[elemento] += 1
+            else:
+                descp += elemento + ' '
+        descp = descp.strip()
         
         for elemento in CONDIMENTS: 
             if CONDIMENTS[elemento] == 1:
@@ -38,7 +41,7 @@ class PrettyPrint(Beverage):
             elif CONDIMENTS[elemento] > 3:
                 descp += ', X' + str(CONDIMENTS[elemento]) + ' ' + elemento
         
-        return self._beverage.get_base() + descp
+        return descp
     
     def cost(self) -> float:
         return self._beverage.cost()

@@ -48,8 +48,8 @@ def main():
     beverage9 = build_beverage('Espresso', 'Venti', ['Whip', 'Mocha', 'Mocha'])
     beverage9 = PrettyPrint(beverage9)
     print(f"Pedido 9: {beverage9.get_description()} ${beverage9.cost():.2f}")
-    # Pedido 10: Un Espresso 'Venti' con Crema, Mocha y 4 de Caramelo
-    beverage10 = build_beverage('Espresso', 'Venti', ['Whip', 'Mocha', 'Caramel', 'Caramel', 'Caramel', 'Caramel'])
+    # Pedido 10: Un DarkRoast 'Venti' con Crema, Mocha y 4 de Caramelo
+    beverage10 = build_beverage('DarkRoast', 'Venti', ['Whip', 'Mocha', 'Caramel', 'Caramel', 'Caramel', 'Caramel'])
     beverage10 = PrettyPrint(beverage10)
     print(f"Pedido 10: {beverage10.get_description()} ${beverage10.cost():.2f}")
     

@@ -31,13 +31,6 @@ class Beverage(ABC):
         el tamaño de la bebida.
         """
         return self._size
-    
-    def get_base(self):
-        """
-        Método abstracto que las subclases deben implementar para devolver
-        la descrición de la bebida base solamente.
-        """
-        return self.get_description()
 
     @abstractmethod
     def cost(self) -> float:

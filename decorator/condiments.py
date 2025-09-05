@@ -20,9 +20,6 @@ class CondimentDecorator(Beverage, ABC):
         el tamaño de la bebida.
         """
         return self._beverage.get_size()
-    
-    def get_base(self):
-        return self._beverage.get_base()
 
     @abstractmethod
     def get_description(self) -> str:
