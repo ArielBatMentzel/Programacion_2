@@ -16,17 +16,15 @@ class PrettyPrint(Beverage):
         """
         Devuelve la descripción formateada de la bebida.
         """
-        descripcion_completa = self.description
         descp = ''
-        list_descp = descripcion_completa.split()
+        list_descp = self.description.split()
         CONDIMENTS = { 'Mocha': 0,
               'Crema': 0,
               'Soja': 0, 
               'Caramelo': 0,
               'Leche': 0
               }
-        
-        
+    
         for elemento in list_descp:
             elemento = elemento.replace(',', '')
             if elemento in CONDIMENTS:
@@ -39,8 +37,6 @@ class PrettyPrint(Beverage):
                 descp += ', ' + QUANTITY[CONDIMENTS[elemento]] + ' ' + elemento
             elif CONDIMENTS[elemento] > 3:
                 descp += ', X' + str(CONDIMENTS[elemento]) + ' ' + elemento
-        
-        
         
         return self._beverage.get_base() + descp
     
