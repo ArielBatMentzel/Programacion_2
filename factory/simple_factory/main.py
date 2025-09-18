@@ -9,3 +9,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+'''
+
+python -m factory.simple_factory.main
+
+'''

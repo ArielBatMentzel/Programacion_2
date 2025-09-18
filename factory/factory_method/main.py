@@ -25,3 +25,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+'''
+
+python -m factory.factory_method.main
+
+'''
