@@ -1,5 +1,9 @@
 from abc import ABC, abstractmethod
-from pizza import Pizza, NYStyleCheesePizza, ChicagoStyleCheesePizza, NYStyleVeggiePizza, NYStylePepperoniPizza, ChicagoStyleVeggiePizza, ChicagoStylePepperoniPizza
+from factory.factory_method.pizza import (
+    Pizza, NYStyleCheesePizza, ChicagoStyleCheesePizza, 
+    NYStyleVeggiePizza, NYStylePepperoniPizza, 
+    ChicagoStyleVeggiePizza, ChicagoStylePepperoniPizza
+    )
 
 class PizzaStore(ABC):
     def order_pizza(self, kind: str) -> Pizza:

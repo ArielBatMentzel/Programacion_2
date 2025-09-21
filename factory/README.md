@@ -147,4 +147,6 @@ La calidad es clave en Objectville. Debes escribir pruebas para asegurar que el 
 Primero tuvimos que investigar, haciendo pruebas con el main, para entender el flujo de información de las clases
 
 Luego empezamos a retocar los scripts dentro de la carpeta factory method para permitir a nuestro negocio implementar nuevos sabores de pizza para cada tienda. 
-Para comprobar que todo funcionara correctamente modificamos el main y empezamos a testear nuestras nuevas clases.
+Para comprobar que todo funcionara correctamente modificamos el main y empezamos a testear nuestras nuevas implementaciones.
+
+problemas importando con imports relativos (uso del .pizza) e imports absoultos. Asi que pasamos a usar todos imports absoultos para que no rompa y se pueda ejecutar tanto desde el main como desde la terminal con pytest.

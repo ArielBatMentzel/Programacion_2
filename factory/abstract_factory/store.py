@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
-from ingredients import NYPizzaIngredientFactory, ChicagoPizzaIngredientFactory, PizzaIngredientFactory
-from pizza import Pizza, CheesePizza, ClamPizza
+from factory.abstract_factory.ingredients import (
+    NYPizzaIngredientFactory, 
+    ChicagoPizzaIngredientFactory, 
+    PizzaIngredientFactory
+    )
+from factory.abstract_factory.pizza import Pizza, CheesePizza, ClamPizza
 
 class PizzaStore(ABC):
     def order_pizza(self, kind: str) -> Pizza:

@@ -1,4 +1,4 @@
-from store import NYPizzaStore, ChicagoPizzaStore
+from factory.abstract_factory.store import NYPizzaStore, ChicagoPizzaStore
 
 def main():
     ny = NYPizzaStore(); chi = ChicagoPizzaStore()
