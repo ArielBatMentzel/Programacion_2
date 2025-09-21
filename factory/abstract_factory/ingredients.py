@@ -78,10 +78,10 @@ class PizzaIngredientFactory(ABC):
     
     # 2.2
     @abstractmethod
-    def create_veggies() -> list[Veggie]:
+    def create_veggies(self) -> list[Veggie]:
         ...
     @abstractmethod
-    def create_pepperoni() -> Pepperoni:
+    def create_pepperoni(self) -> Pepperoni:
         ...
 
 # Concrete factories
@@ -92,10 +92,9 @@ class NYPizzaIngredientFactory(PizzaIngredientFactory):
     def create_clam(self) -> Clams:   return Clams("Fresh Clams")
     
     # 2.3
-    def create_veggies() -> list[Veggie]:
+    def create_veggies(self) -> list[Veggie]:
         return [Onion(), Basil(), SweetPepper()]
-    
-    def create_pepperoni() -> Pepperoni:
+    def create_pepperoni(self) -> Pepperoni:
         return SlicedPepperoni()
     
 class ChicagoPizzaIngredientFactory(PizzaIngredientFactory):
@@ -105,8 +104,7 @@ class ChicagoPizzaIngredientFactory(PizzaIngredientFactory):
     def create_clam(self) -> Clams:   return Clams("Frozen Clams")
     
     # 2.3
-    def create_veggies() -> list[Veggie]:
+    def create_veggies(self) -> list[Veggie]:
         return [Spinach(), Mushroom(), Onion()]  
-    
-    def create_pepperoni() -> Pepperoni:
+    def create_pepperoni(self) -> Pepperoni:
         return SlicedPepperoni()
