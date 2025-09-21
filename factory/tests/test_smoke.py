@@ -28,7 +28,7 @@ def test_imports():
     assert callable(s.main) and callable(fm.main) and callable(af.main), \
         "s.main, fm.main o af.main no son llamables"
 
-def test_sabores(ny_fm_store, chi_fm_store):
+def test_sabores_fm(ny_fm_store, chi_fm_store):
     ny = ny_fm_store
     chi = chi_fm_store
 
@@ -50,4 +50,4 @@ def test_sabores(ny_fm_store, chi_fm_store):
     
     p6 = chi.order_pizza("pepperoni")
     assert isinstance(p6, ChicagoStylePepperoniPizza)
-    
+
