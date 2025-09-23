@@ -33,14 +33,16 @@ git stash
 git merge upstream/main
 git stash pop
 ________________________________________
+
 Resumen comandos clave
-git remote add upstream <url-del-profe>    # solo 1 vez
+
+git remote add upstream (https://github.com/santiagoblaslaguzza/prograII.git)    # solo 1 vez
 git fetch upstream                         # traer cambios
-git checkout Mauricio                      # cambiar a tu rama
+git checkout Valentin                    # cambiar a tu rama
 git checkout upstream/main -- carpeta/    # traer carpeta específica
 git add carpeta/
 git commit -m "Traer carpeta nueva"
 git merge upstream/main                    # traer todos los cambios (opcional)
-git push origin Mauricio                   # subir cambios
+git push origin Valentin                   # subir cambios
 git stash                                 # guardar cambios temporales
 git stash pop                             # recuperar cambios

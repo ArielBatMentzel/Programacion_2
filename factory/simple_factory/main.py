@@ -1,5 +1,5 @@
-from .store import PizzaStore
-from .simple_factory import SimplePizzaFactory
+from factory.simple_factory.store import PizzaStore
+from factory.simple_factory.simple_factory import SimplePizzaFactory
 
 def main():
     store = PizzaStore(SimplePizzaFactory())
