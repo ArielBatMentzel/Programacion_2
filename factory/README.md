@@ -143,7 +143,7 @@ La calidad es clave en Objectville. Debes escribir pruebas para asegurar que el 
 
 
 
-# Operaciones sobre el códgio:
+## Decisiones de diseño
 Primero tuvimos que investigar, haciendo pruebas con el main, para entender el flujo de información de las clases
 
 Luego empezamos a retocar los scripts dentro de la carpeta factory method para permitir a nuestro negocio implementar nuevos sabores de pizza para cada tienda. 
