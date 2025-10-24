@@ -1,4 +1,8 @@
+
+```markdown
 # Estructura del Proyecto
+
+```
 
 proyecto/
 │
@@ -15,12 +19,12 @@ proyecto/
 │   └── fixed_income_factory.py
 │
 ├── db/                      # Persistencia de datos
-|   |── abstract_db.py       # Clase base abstracta que define la interfaz de todas las bases de datos
+│   ├── abstract_db.py       # Clase base abstracta que define la interfaz de todas las bases de datos
 │   ├── instruments_db.py    # Maneja almacenamiento de instrumentos
 │   └── users_db.py          # Maneja usuarios y sesiones
 │
 ├── api/                     # Integración con fuentes externas
-│   └── cotizar_api.py  # Obtiene datos de bonos, tasas y tipo de cambio
+│   └── cotizar_api.py       # Obtiene datos de bonos, tasas y tipo de cambio
 │
 ├── auth/                    # Seguridad y autenticación
 │   └── auth_service.py      # Login, logout y gestión de sesiones
@@ -35,3 +39,7 @@ proyecto/
 │
 ├── requirements.txt         # Dependencias del proyecto
 └── README.md
+
+```
+
+
