@@ -19,7 +19,7 @@ BEVERAGES = {
 
 def build_beverage(base: str, size: str, condiments: list[str]):
     '''
-    Genera la bebida ya decorada
+    Genera la bebida ya decorada 
     '''
     
     if base not in BEVERAGES:
