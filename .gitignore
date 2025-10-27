@@ -1,0 +1,9 @@
+# Entorno Virtual de Python
+# El Proyecto/venv/ no es necesario, ya que el venv/ ignora todas las carpetas con ese nombre
+Proyecto/venv/ 
+venv/
+
+# Archivos de caché de Python
+__pycache__/
+*.pyc
+*.pyd
