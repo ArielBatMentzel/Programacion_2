@@ -5,32 +5,29 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-import pandas as pd
-import re
+import sqlite3
 import os
+import re
 
 print("Iniciando scraping de dólarhoy.com...")
 
-# Configurar rutas
+# Rutas
 carpeta_script = os.path.dirname(os.path.abspath(__file__))
-carpeta_data = os.path.join(carpeta_script, "data")
-os.makedirs(carpeta_data, exist_ok=True)
-ruta_csv = os.path.join(carpeta_data, "dolares.csv")
+db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros.db")  # usa la db existente
 
-# Opciones headless
+# Configurar Selenium headless
 options = Options()
 options.add_argument("--headless=new")
 options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-# Iniciar navegador
+# Abrir navegador
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 driver.get("https://dolarhoy.com/")
-
 wait = WebDriverWait(driver, 10)
 
-# Bloques de cotizaciones
+# Bloques de cotización
 bloques = wait.until(EC.presence_of_all_elements_located(
     (By.CSS_SELECTOR, "div.tile.is-child, div.tile.is-child.only-mobile")
 ))
@@ -43,9 +40,9 @@ for b in bloques:
         venta = b.find_element(By.CSS_SELECTOR, ".venta .val").text.strip()
         variacion = b.find_element(By.CSS_SELECTOR, ".var-porcentaje div").text.strip()
 
-        # Función para limpiar números
+        # Limpiar número y mantener todos los decimales
         def limpiar_numero(valor):
-            valor = re.sub(r'[^\d.,-]', '', valor).replace(',', '.')
+            valor = re.sub(r"[^\d.,-]", "", valor).replace(",", ".")
             try:
                 return float(valor)
             except:
@@ -56,10 +53,29 @@ for b in bloques:
         continue
 
 driver.quit()
+print("✅ Datos extraídos de la web.")
 
-# Guardar DataFrame
-df = pd.DataFrame(data, columns=["Tipo", "Compra", "Venta", "Variacion"])
-df = df.dropna(how="all")
-df.to_csv(ruta_csv, index=False)
+# Guardar en la base existente
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
 
-print(f"✅ Scraping finalizado. Datos guardados en: {ruta_csv}")
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS dolarhoy (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tipo TEXT,
+    compra REAL,
+    venta REAL,
+    variacion REAL
+)
+""")
+
+for fila in data:
+    cursor.execute("""
+    INSERT INTO dolarhoy (tipo, compra, venta, variacion)
+    VALUES (?, ?, ?, ?)
+    """, fila)
+
+conn.commit()
+conn.close()
+print(f"✅ Datos guardados en la base existente: {db_path}")
+print("Fin del scraping de dólarhoy.")
