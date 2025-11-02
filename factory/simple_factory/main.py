@@ -1,5 +1,5 @@
-from .store import PizzaStore
-from .simple_factory import SimplePizzaFactory
+from factory.simple_factory.store import PizzaStore
+from factory.simple_factory.simple_factory import SimplePizzaFactory
 
 def main():
     store = PizzaStore(SimplePizzaFactory())
@@ -9,9 +9,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-'''
-
-python -m factory.simple_factory.main
-
-'''

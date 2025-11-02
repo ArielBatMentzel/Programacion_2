@@ -9,6 +9,7 @@ El objetivo es que, al finalizar, puedas:
   * **Identificar** los problemas de mantenimiento y rigidez causados por la instanciación directa de objetos.
   * **Aplicar** los patrones de fábrica para desacoplar el código cliente de las clases concretas.
   * **Comprender** las diferencias, ventajas y desventajas entre Simple Factory, Factory Method y Abstract Factory.
+  * **Extender** un diseño existente que utiliza estos patrones, respetando principios como el **Open-Closed Principle (OCP)** y el **Dependency Inversion Principle (DIP)**.
   * **Extender** un diseño existente que utiliza estos patrones, respetando principios como el **Open-Closed Principle (OCP)**
   las entidades de software (como clases, módulos o funciones) deben estar abiertas para su extensión, pero cerradas para su modificación
    y el **Dependency Inversion Principle (DIP)**.

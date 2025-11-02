@@ -21,32 +21,3 @@ class ChicagoStyleCheesePizza(Pizza):
     def __init__(self):
         self.name="Chicago Style Deep Dish Cheese"; self.toppings=["Shredded Mozzarella"]
     def cut(self): print("Cutting the pizza into square slices")
-#las de chicago se cortan en cuadrados
-
-######### PASO 1 ############
-
-class NYStyleVeggiePizza(Pizza):
-    def __init__(self):
-        self.name = "NY Style Veggie Pizza"
-        self.toppings = ["Garlic", "Onion", "Mushroom", "Red Pepper"]
-
-class NYStylePepperoniPizza(Pizza):
-    def __init__(self):
-        self.name = "NY Style Pepperoni Pizza"
-        self.toppings = ["Pepperoni", "Reggiano Cheese"]
-
-class ChicagoStyleVeggiePizza(Pizza):
-    def __init__(self):
-        self.name = "Chicago Style Veggie Pizza"
-        self.toppings = ["Black Olives", "Spinach", "Eggplant"]
-
-    def cut(self):
-        print("Cutting the pizza into square slices")
-
-class ChicagoStylePepperoniPizza(Pizza):
-    def __init__(self):
-        self.name = "Chicago Style Pepperoni Pizza"
-        self.toppings = ["Sliced Pepperoni", "Mozzarella Cheese"]
-
-    def cut(self):
-        print("Cutting the pizza into square slices")

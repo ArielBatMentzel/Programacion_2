@@ -1,33 +1,9 @@
 from .store import NYPizzaStore, ChicagoPizzaStore
 
 def main():
-    print("*" * 20, "FACTORY_METHOD", "*" * 25)
-
-    ny = NYPizzaStore()
-    chi = ChicagoPizzaStore()
-
-    # NY pizzas
-    print("\n--- New York Orders ---")
-    pedidos =["cheese", "veggie", "pepperoni"]
-    for orden in pedidos:
-        pizza = ny.order_pizza(orden)
-        print("Ethan ordered:", pizza)
-        print("-" * 40)
-
-    # Chicago pizzas
-    print("\n--- Chicago Orders ---")
-    pedidos = ["cheese", "veggie", "pepperoni"]
-    for orden in pedidos :
-        pizza = chi.order_pizza(orden)
-        print("Joel ordered:", pizza)
-        print("-" * 40)
-
+    ny = NYPizzaStore(); chi = ChicagoPizzaStore()
+    p1 = ny.order_pizza("cheese"); print("Ethan ordered:", p1)
+    p2 = chi.order_pizza("cheese"); print("Joel ordered:", p2)
 
 if __name__ == "__main__":
     main()
-
-'''
-
-python -m factory.factory_method.main
-
-'''
