@@ -1,4 +1,13 @@
 from abc import ABC, abstractmethod
+from factory.abstract_factory.ingredients import (
+    NYPizzaIngredientFactory, 
+    ChicagoPizzaIngredientFactory, 
+    PizzaIngredientFactory
+    )
+from factory.abstract_factory.pizza import (
+    Pizza, CheesePizza, ClamPizza,
+    VeggiePizza, PepperoniPizza
+    )
 from .ingredients import NYPizzaIngredientFactory, ChicagoPizzaIngredientFactory, PizzaIngredientFactory
 from .pizza import Pizza, CheesePizza, ClamPizza
 
@@ -15,6 +24,11 @@ class NYPizzaStore(PizzaStore):
     def create_pizza(self, kind: str) -> Pizza:
         k = kind.lower()
         if k=="cheese": return CheesePizza("NY Style Cheese Pizza", self.factory)
+        if k=="clam": return ClamPizza("NY Style Clam Pizza", self.factory)
+        
+        # 2.5
+        if k=="veggie": return VeggiePizza("NY Style Clam Pizza", self.factory)
+        if k=="pepperoni": return PepperoniPizza("NY Style Clam Pizza", self.factory)
         if k=="clam":   return ClamPizza("NY Style Clam Pizza", self.factory)
         raise ValueError(f"No NY pizza for kind: {kind}")
 
@@ -24,4 +38,9 @@ class ChicagoPizzaStore(PizzaStore):
         k = kind.lower()
         if k=="cheese": return CheesePizza("Chicago Style Cheese Pizza", self.factory)
         if k=="clam":   return ClamPizza("Chicago Style Clam Pizza", self.factory)
+        
+        # 2.5
+        if k=="veggie": return VeggiePizza("NY Style Clam Pizza", self.factory)
+        if k=="pepperoni": return PepperoniPizza("NY Style Clam Pizza", self.factory)
+        raise ValueError(f"No NY pizza for kind: {kind}")
         raise ValueError(f"No Chicago pizza for kind: {kind}")
