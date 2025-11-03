@@ -37,7 +37,7 @@ python-dotenv==1.0.0        # Manejo de .env
 pytest==8.3.2               # Framework de testing
 
 # Base de datos y persistencia
-sqlalchemy==2.0.45          # ORM para bases de datos relacionales
+sqlalchemy==2.0.44          # ORM para bases de datos relacionales
 databases==0.7.1            # Manejo async con SQLAlchemy y FastAPI
 
 # Manipulación de datasets

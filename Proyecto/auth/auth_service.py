@@ -2,7 +2,7 @@
 
 from typing import Optional
 from models.user import User, Session
-from db.users_db import DataBaseUsuario
+from Proyecto.db.usuarios.users_db import DataBaseUsuario
 import hashlib
 import secrets
 from datetime import datetime, timedelta
