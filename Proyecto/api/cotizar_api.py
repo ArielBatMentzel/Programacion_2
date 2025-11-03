@@ -8,7 +8,7 @@ y notificar cambios a los instrumentos registrados.
 
 from typing import List
 from models.instruments import FixedIncomeInstrument
-from db.instruments_db import InstrumentsDB
+from Proyecto.db.instrumentos.instruments_db import DBInstruments
 from models.dolar import Dolar
 
 class CotizarAPI:
@@ -19,7 +19,7 @@ class CotizarAPI:
     - Tipo de cambio y bandas cambiarias
     """
 
-    def __init__(self, db: InstrumentsDB, dolar: Dolar):
+    def __init__(self, db: DBInstruments, dolar: Dolar):
         self.db = db          # Base de datos de instrumentos
         self.dolar = dolar    # Objeto Dolar para notificar cambios
 
