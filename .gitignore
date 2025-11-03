@@ -14,3 +14,9 @@ __pycache__/
 
 # env files
 .env
+
+# Base de datos
+# Ignorar el archivo de base de datos SQLite
+*.db
+*.sqlite
+*.sqlite3
