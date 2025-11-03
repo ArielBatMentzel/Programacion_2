@@ -51,3 +51,4 @@ def test_sabores_fm(ny_fm_store, chi_fm_store):
     p6 = chi.order_pizza("pepperoni")
     assert isinstance(p6, ChicagoStylePepperoniPizza)
 
+    assert callable(s.main) and callable(fm.main) and callable(af.main)

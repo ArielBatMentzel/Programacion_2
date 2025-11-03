@@ -1,4 +1,5 @@
 from factory.factory_method.store import NYPizzaStore, ChicagoPizzaStore
+from .store import NYPizzaStore, ChicagoPizzaStore
 
 def main():
     ny = NYPizzaStore(); chi = ChicagoPizzaStore()
@@ -19,5 +20,7 @@ def main():
     print('- Pedido Finalizado')
     
     print('--- Paso 2: ')
+    p2 = chi.order_pizza("cheese"); print("Joel ordered:", p2)
+
 if __name__ == "__main__":
     main()

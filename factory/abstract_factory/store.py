@@ -8,6 +8,8 @@ from factory.abstract_factory.pizza import (
     Pizza, CheesePizza, ClamPizza,
     VeggiePizza, PepperoniPizza
     )
+from .ingredients import NYPizzaIngredientFactory, ChicagoPizzaIngredientFactory, PizzaIngredientFactory
+from .pizza import Pizza, CheesePizza, ClamPizza
 
 class PizzaStore(ABC):
     def order_pizza(self, kind: str) -> Pizza:
@@ -27,6 +29,7 @@ class NYPizzaStore(PizzaStore):
         # 2.5
         if k=="veggie": return VeggiePizza("NY Style Clam Pizza", self.factory)
         if k=="pepperoni": return PepperoniPizza("NY Style Clam Pizza", self.factory)
+        if k=="clam":   return ClamPizza("NY Style Clam Pizza", self.factory)
         raise ValueError(f"No NY pizza for kind: {kind}")
 
 class ChicagoPizzaStore(PizzaStore):
@@ -40,3 +43,4 @@ class ChicagoPizzaStore(PizzaStore):
         if k=="veggie": return VeggiePizza("NY Style Clam Pizza", self.factory)
         if k=="pepperoni": return PepperoniPizza("NY Style Clam Pizza", self.factory)
         raise ValueError(f"No NY pizza for kind: {kind}")
+        raise ValueError(f"No Chicago pizza for kind: {kind}")
