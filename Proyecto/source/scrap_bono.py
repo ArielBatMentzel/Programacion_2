@@ -7,7 +7,7 @@ import sqlite3
 import os
 import time
 
-print("Inicio del scraping de bonos Rava...")
+print("Inicio del scraping de bonos...")
 
 # Configurar Chrome en modo headless
 options = Options()
@@ -18,7 +18,7 @@ options.add_argument("--disable-gpu")
 
 # Carpeta del proyecto y base de datos
 carpeta_proyecto = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-db_path = os.path.join(carpeta_proyecto, "db", "datos_financieros.db")
+db_path = os.path.join(carpeta_proyecto, "db","datos_financieros", "datos_financieros.db")
 os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Crear carpeta si no existe
 
 # Iniciar navegador

@@ -9,11 +9,11 @@ import sqlite3
 import os
 import re
 
-print("Iniciando scraping de dólarhoy.com...")
+print("Iniciando scraping de dólar...")
 
 # Rutas
 carpeta_script = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros.db")  # usa la db existente
+db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db")  # usa la db existente
 
 # Configurar Selenium headless
 options = Options()
@@ -60,7 +60,7 @@ conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS dolarhoy (
+CREATE TABLE IF NOT EXISTS dolar (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tipo TEXT,
     compra REAL,
@@ -71,11 +71,11 @@ CREATE TABLE IF NOT EXISTS dolarhoy (
 
 for fila in data:
     cursor.execute("""
-    INSERT INTO dolarhoy (tipo, compra, venta, variacion)
+    INSERT INTO dolar (tipo, compra, venta, variacion)
     VALUES (?, ?, ?, ?)
     """, fila)
 
 conn.commit()
 conn.close()
 print(f"✅ Datos guardados en la base existente: {db_path}")
-print("Fin del scraping de dólarhoy.")
+print("Fin del scraping de dólar.")

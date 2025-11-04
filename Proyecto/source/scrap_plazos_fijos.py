@@ -10,7 +10,7 @@ print("Inicio del scraping de plazos fijos...")
 
 # Ruta de la base existente
 carpeta_script = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros.db")
+db_path = os.path.join(carpeta_script, "..", "db","datos_financieros", "datos_financieros.db")
 os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Asegura que exista la carpeta
 
 # Inicializar driver headless
