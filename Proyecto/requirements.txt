@@ -42,6 +42,12 @@ databases==0.7.1            # Manejo async con SQLAlchemy y FastAPI
 
 # Manipulación de datasets
 pandas==2.1.0               # Lectura y manipulación de CSV/XLS externos
+pandas==2.3.3               # (Ariel) Considero que es mejor porque no requiere tener instalado visual studio build tools
+
 
 # Logging y monitoreo
 loguru==0.7.0               # Logging simple y flexible
+
+# Controlar navegadores (abrir páginas, leer/scrappear datos, etc).
+selenium: 4.38.0
+webdriver_manager: 4.0.2

@@ -4,9 +4,6 @@ Proyecto/
     main.py
     README.md
     requirements.txt
-    api/
-        cotizar_api.py
-        __init__.py
     auth/
         auth_service.py
         __init__.py
