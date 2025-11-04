@@ -20,3 +20,8 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
+
+# Ignoramos las carpetas que no son del proyecto
+factory/
+decorator/
+observer/
