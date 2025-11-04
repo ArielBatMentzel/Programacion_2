@@ -19,7 +19,7 @@ options.add_argument("--disable-gpu")
 
 # Rutas
 carpeta_script = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros.db")  # apunta a la DB existente
+db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros","datos_financieros.db")  # apunta a la DB existente
 
 # Iniciar navegador
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)

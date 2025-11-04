@@ -12,7 +12,7 @@ import re
 print("Iniciando scraping de letras...")
 
 # Ruta relativa a la base de datos existente
-db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "datos_financieros.db")
+db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "datos_financieros", "datos_financieros.db")
 
 # Configurar Selenium
 chrome_options = Options()
