@@ -41,5 +41,5 @@ class FixedIncomeInstrumentFactory(FinancialInstrumentFactory):
         elif tipo == "pase":
             return Pase(nombre=nombre, moneda=moneda, **kwargs)
         else:
-            print(f"[⚠️] Tipo de instrumento desconocido: {tipo}")
+            print(f"Tipo de instrumento desconocido: {tipo}")
             return None
