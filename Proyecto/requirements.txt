@@ -24,11 +24,13 @@ uvicorn[standard]==0.23.1  # Servidor ASGI para FastAPI
 
 # Validación y manejo de datos
 pydantic==2.7.0            # Modelos de datos y validación
-typing-extensions==4.8.0   # Para soportar tipos modernos (List, Any, etc.)
+#typing-extensions==4.8.0   # Para soportar tipos modernos (List, Any, etc.)
+typing-extensions>=4.15,<5.0
+
 
 # Consumo de APIs externas
 requests==2.32.0            # Cliente HTTP síncrono
-httpx==1.4.0                # Cliente HTTP asíncrono, útil para FastAPI
+#httpx==1.4.0                # Cliente HTTP asíncrono, útil para FastAPI
 
 # Variables de entorno
 python-dotenv==1.0.0        # Manejo de .env
@@ -37,11 +39,17 @@ python-dotenv==1.0.0        # Manejo de .env
 pytest==8.3.2               # Framework de testing
 
 # Base de datos y persistencia
-sqlalchemy==2.0.45          # ORM para bases de datos relacionales
-databases==0.7.1            # Manejo async con SQLAlchemy y FastAPI
+sqlalchemy==2.0.44          # ORM para bases de datos relacionales
+#databases==0.7.1            # Manejo async con SQLAlchemy y FastAPI
 
 # Manipulación de datasets
-pandas==2.1.0               # Lectura y manipulación de CSV/XLS externos
+#pandas==2.1.0               # Lectura y manipulación de CSV/XLS externos
+pandas==2.3.3               # (Ariel) Considero que es mejor porque no requiere tener instalado visual studio build tools
+
 
 # Logging y monitoreo
 loguru==0.7.0               # Logging simple y flexible
+
+# Controlar navegadores (abrir páginas, leer/scrappear datos, etc).
+selenium== 4.38.0
+webdriver_manager== 4.0.2
