@@ -1,55 +1,16 @@
-# Requisitos del proyecto FastAPI
-# Serán utilizadas por el entorno virtual
-
-# PASO A PASO DEL ENTORNO VIRTUAL
-"""
-1️⃣ Crear el entorno virtual (una sola vez):
-   python -m venv venv
-2️⃣ Activar el entorno virtual cada vez que quieras trabajar:
-   Windows: venv\Scripts\activate
-   Linux/macOS: source venv/bin/activate
-3️⃣ Instalar las dependencias:
-   pip install -r requirements.txt
-4️⃣ Para actualizar dependencias después de instalar algo nuevo:
-   pip freeze > requirements.txt
-5️⃣ Para desactivar el entorno cuando termines:
-   deactivate
-6️⃣ Para levantar la API FastAPI mientras el entorno está activo:
-   uvicorn main:app --reload
-"""
-
-# Framework web y servidor
-fastapi==0.102.0           # Framework web
-uvicorn[standard]==0.23.1  # Servidor ASGI para FastAPI
-
-# Validación y manejo de datos
-pydantic==2.7.0            # Modelos de datos y validación
-#typing-extensions==4.8.0   # Para soportar tipos modernos (List, Any, etc.)
-typing-extensions>=4.15,<5.0
-
-
-# Consumo de APIs externas
-requests==2.32.0            # Cliente HTTP síncrono
-#httpx==1.4.0                # Cliente HTTP asíncrono, útil para FastAPI
-
-# Variables de entorno
-python-dotenv==1.0.0        # Manejo de .env
-
-# Pruebas unitarias
-pytest==8.3.2               # Framework de testing
-
-# Base de datos y persistencia
-sqlalchemy==2.0.44          # ORM para bases de datos relacionales
-#databases==0.7.1            # Manejo async con SQLAlchemy y FastAPI
-
-# Manipulación de datasets
-#pandas==2.1.0               # Lectura y manipulación de CSV/XLS externos
-pandas==2.3.3               # (Ariel) Considero que es mejor porque no requiere tener instalado visual studio build tools
-
-
-# Logging y monitoreo
-loguru==0.7.0               # Logging simple y flexible
-
-# Controlar navegadores (abrir páginas, leer/scrappear datos, etc).
-selenium== 4.38.0
-webdriver_manager== 4.0.2
+requests==2.32.3          # Para acceder a APIs o páginas web
+beautifulsoup4==4.12.3    # Para procesar HTML (scraping)
+pandas==2.2.2             # Para manejar tablas y CSVs
+selenium==4.38.0          # Para automatizar navegadores
+webdriver-manager==4.0.1  # Para gestionar drivers (Chrome, Edge, etc.)
+schedule==1.2.1           # Para tareas automáticas
+matplotlib==3.9.2
+numpy==1.24.3
+fastapi==0.102.0
+uvicorn[standard]==0.23.1
+pydantic==2.7.0
+typing-extensions>=4.15.0,<5.0.0
+httpx==0.24.0
+python-dotenv==1.0.0
+pytest==8.3.2
+loguru==0.7.0
