@@ -1,7 +1,8 @@
 # archivo: factory/fixed_income_factory.py
 
 from abc import ABC, abstractmethod
-from models.instruments import FixedIncomeInstrument, Bono, Letra, PlazoFijo, Pase
+from models.instruments import FixedIncomeInstrument, Bono, Letra, PlazoFijo
+#Pase
 from typing import Optional
 
 class FinancialInstrumentFactory(ABC):
@@ -14,7 +15,7 @@ class FinancialInstrumentFactory(ABC):
     def crear_instrumento(self, tipo: str, nombre: str, moneda: str, **kwargs) -> Optional[FixedIncomeInstrument]:
         """
         Crea un instrumento financiero según el tipo especificado.
-        :param tipo: tipo de instrumento ("bono", "letra", "plazo_fijo", "pase")
+        #:param tipo: tipo de instrumento ("bono", "letra", "plazo_fijo", "pase")
         :param nombre: nombre del instrumento
         :param moneda: moneda del instrumento
         :param kwargs: otros parámetros específicos del instrumento
@@ -38,8 +39,7 @@ class FixedIncomeInstrumentFactory(FinancialInstrumentFactory):
             return Letra(nombre=nombre, moneda=moneda, **kwargs)
         elif tipo == "plazo_fijo":
             return PlazoFijo(nombre=nombre, moneda=moneda, **kwargs)
-        elif tipo == "pase":
-            return Pase(nombre=nombre, moneda=moneda, **kwargs)
+        # elif tipo == "pase":
+        #     return Pase(nombre=nombre, moneda=moneda, **kwargs)
         else:
-            print(f"Tipo de instrumento desconocido: {tipo}")
             return None
