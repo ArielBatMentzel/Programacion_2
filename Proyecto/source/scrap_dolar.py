@@ -59,8 +59,12 @@ print("✅ Datos extraídos de la web.")
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
+# 🟢 CAMBIO 1: eliminar la tabla anterior si existe
+cursor.execute("DROP TABLE IF EXISTS dolar")
+
+# 🟢 CAMBIO 2: crear la tabla desde cero (sin IF NOT EXISTS)
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS dolar (
+CREATE TABLE dolar (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tipo TEXT,
     compra REAL,
@@ -69,13 +73,13 @@ CREATE TABLE IF NOT EXISTS dolar (
 )
 """)
 
-for fila in data:
-    cursor.execute("""
-    INSERT INTO dolar (tipo, compra, venta, variacion)
-    VALUES (?, ?, ?, ?)
-    """, fila)
+# 🟢 CAMBIO 3: insertar todos los registros de una vez con executemany()
+cursor.executemany("""
+INSERT INTO dolar (tipo, compra, venta, variacion)
+VALUES (?, ?, ?, ?)
+""", data)
 
 conn.commit()
 conn.close()
-print(f"✅ Datos guardados en la base existente: {db_path}")
+print(f"✅ Tabla reemplazada y datos guardados en: {db_path}")
 print("Fin del scraping de dólar.")
