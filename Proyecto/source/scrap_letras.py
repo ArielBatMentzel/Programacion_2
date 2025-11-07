@@ -2,7 +2,11 @@ import os
 import time
 import pandas as pd
 
-
+"""
+Crear una función que cargue los datos del CSV a la base de datos de 'datos_financieros.db'
+Asegurarse que cuando se ejecute la función, al menos en datos_financieros, elimine las filas 
+que ya estan y cargue las nuevas.
+"""
 
 
 
