@@ -1,5 +1,4 @@
 requests==2.32.3          # Para acceder a APIs o páginas web
-beautifulsoup4==4.12.3    # Para procesar HTML (scraping)
 pandas==2.2.2             # Para manejar tablas y CSVs
 selenium==4.38.0          # Para automatizar navegadores
 webdriver-manager==4.0.1  # Para gestionar drivers (Chrome, Edge, etc.)
