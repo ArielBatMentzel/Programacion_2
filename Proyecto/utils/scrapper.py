@@ -33,8 +33,10 @@ async def run_scraper(nombre: str):
     print(f"▶ Ejecutando {archivo} ...")
     start = time.time()
     
+    import sys
+
     proc = await asyncio.create_subprocess_exec(
-        "python", path,
+        sys.executable, path,  # 👈 usa el mismo intérprete actual
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )

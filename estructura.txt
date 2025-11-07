@@ -1,7 +1,7 @@
 Proyecto/
     config.py
-    estructura.py
     main.py
+    prueba.py
     README.md
     requirements.txt
     auth/
@@ -9,14 +9,14 @@ Proyecto/
         __init__.py
     db/
         abstract_db.py
+        datos_financieros.db
         datos_financieros/
-            datos_financieros.db
-        instrumentos/
             crear_db_financieros.py
-            instruments_db.py
+            datos_financieros.db
             __init__.py
         usuarios/
             users_db.py
+            usuarios.db
             __init__.py
     factory/
         fixed_income_factory.py
@@ -34,12 +34,14 @@ Proyecto/
         scrap_dolar.py
         scrap_letras.py
         scrap_plazos_fijos.py
-        no_anda/
-            scrap_pases.py
     tests/
         test_alertas.py
         test_auth.py
         test_instruments.py
     utils/
+        estructura.py
         helpers.py
+        obtener_banda_cambiaria.py
+        obtener_ultimo_valor_dolar.py
+        scrapper.py
         __init__.py
