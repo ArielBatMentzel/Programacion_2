@@ -1,5 +1,5 @@
 from typing import Type
-from .pizza import Pizza, CheesePizza, VeggiePizza, ClamPizza, PepperoniPizza
+from factory.simple_factory.pizza import Pizza, CheesePizza, VeggiePizza, ClamPizza, PepperoniPizza
 
 class SimplePizzaFactory:
     def create_pizza(self, kind: str) -> Pizza:

@@ -9,11 +9,11 @@ import sqlite3
 import os
 import re
 
-print("Iniciando scraping de dólarhoy.com...")
+print("Iniciando scraping de dólar...")
 
 # Rutas
 carpeta_script = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros.db")  # usa la db existente
+db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db")  # usa la db existente
 
 # Configurar Selenium headless
 options = Options()
@@ -59,8 +59,12 @@ print("✅ Datos extraídos de la web.")
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
+# 🟢 CAMBIO 1: eliminar la tabla anterior si existe
+cursor.execute("DROP TABLE IF EXISTS dolar")
+
+# 🟢 CAMBIO 2: crear la tabla desde cero (sin IF NOT EXISTS)
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS dolarhoy (
+CREATE TABLE dolar (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     tipo TEXT,
     compra REAL,
@@ -69,13 +73,13 @@ CREATE TABLE IF NOT EXISTS dolarhoy (
 )
 """)
 
-for fila in data:
-    cursor.execute("""
-    INSERT INTO dolarhoy (tipo, compra, venta, variacion)
-    VALUES (?, ?, ?, ?)
-    """, fila)
+# 🟢 CAMBIO 3: insertar todos los registros de una vez con executemany()
+cursor.executemany("""
+INSERT INTO dolar (tipo, compra, venta, variacion)
+VALUES (?, ?, ?, ?)
+""", data)
 
 conn.commit()
 conn.close()
-print(f"✅ Datos guardados en la base existente: {db_path}")
-print("Fin del scraping de dólarhoy.")
+print(f"✅ Tabla reemplazada y datos guardados en: {db_path}")
+print("Fin del scraping de dólar.")

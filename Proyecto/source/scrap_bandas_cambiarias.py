@@ -19,7 +19,7 @@ options.add_argument("--disable-gpu")
 
 # Rutas
 carpeta_script = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros.db")  # apunta a la DB existente
+db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db")
 
 # Iniciar navegador
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
@@ -31,6 +31,7 @@ tabla = WebDriverWait(driver, 15).until(
 )
 filas = tabla.find_elements(By.TAG_NAME, "tr")
 
+# Extraer datos
 datos = []
 for fila in filas[1:]:
     celdas = fila.find_elements(By.TAG_NAME, "td")
@@ -43,12 +44,16 @@ for fila in filas[1:]:
 driver.quit()
 print(f"✅ Datos extraídos: {len(datos)} filas")
 
-# Guardar en la base de datos existente
+# Guardar en la base de datos existente (reemplazando la tabla)
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
+# Eliminar tabla anterior si existe
+cursor.execute("DROP TABLE IF EXISTS bandas_cambiarias")
+
+# Crear tabla nueva
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS bandas_cambiarias (
+CREATE TABLE bandas_cambiarias (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fecha TEXT,
     banda_inferior REAL,
@@ -56,12 +61,12 @@ CREATE TABLE IF NOT EXISTS bandas_cambiarias (
 )
 """)
 
-for fila in datos:
-    cursor.execute("""
-    INSERT INTO bandas_cambiarias (fecha, banda_inferior, banda_superior)
-    VALUES (?, ?, ?)
-    """, fila)
+# Insertar nuevos datos
+cursor.executemany("""
+INSERT INTO bandas_cambiarias (fecha, banda_inferior, banda_superior)
+VALUES (?, ?, ?)
+""", datos)
 
 conn.commit()
 conn.close()
-print(f"✅ Datos guardados en la base existente: {db_path}")
+print(f"✅ Tabla reemplazada y datos guardados en: {db_path}")

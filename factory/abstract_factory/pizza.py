@@ -15,12 +15,31 @@ class Pizza(ABC):
 class CheesePizza(Pizza):
     def prepare(self):
         print(f"Preparing {self.name}")
+        self.dough=self.f.create_dough(); 
+        self.sauce=self.f.create_sauce(); 
+        self.cheese=self.f.create_cheese()
         self.dough=self.f.create_dough(); self.sauce=self.f.create_sauce(); self.cheese=self.f.create_cheese()
         print(" ->", self.dough, "/", self.sauce, "/", self.cheese)
 
 class ClamPizza(Pizza):
     def prepare(self):
         print(f"Preparing {self.name}")
+        self.dough=self.f.create_dough(); 
+        self.sauce=self.f.create_sauce(); 
+        self.cheese=self.f.create_cheese(); 
+        self.clam=self.f.create_clam()
+        print(" ->", self.dough, "/", self.sauce, "/", self.cheese, "/", self.clam)
+
+class VeggiePizza(Pizza):
+    def prepare(self):
+        print(f"Preparing {self.name}")
+        self.dough=self.f.create_dough()
+        self.sauce=self.f.create_sauce()
+        self.cheese=self.f.create_cheese()
+        self.clam=self.f.create_clam()
+        # 2.4
+        self.veggies=self.f.create_veggies()
+        print(" ->", self.dough, "/", self.sauce, "/", self.cheese, "/", self.clam, "/", self.veggies)
         self.dough=self.f.create_dough(); self.sauce=self.f.create_sauce(); self.cheese=self.f.create_cheese(); self.clam=self.f.create_clam()
         print(" ->", self.dough, "/", self.sauce, "/", self.cheese, "/", self.clam)
 
@@ -39,6 +58,13 @@ class VeggiePizza(Pizza):
 class PepperoniPizza(Pizza):
     def prepare(self):
         print(f"Preparing {self.name}")
+        self.dough=self.f.create_dough(); 
+        self.sauce=self.f.create_sauce(); 
+        self.cheese=self.f.create_cheese(); 
+        self.clam=self.f.create_clam()
+        # 2.4
+        self.pepperoni=self.f.create_pepperoni()
+        print(" ->", self.dough, "/", self.sauce, "/", self.cheese, "/", self.clam, "/", self.pepperoni)
         self.dough = self.f.create_dough()
         self.sauce = self.f.create_sauce()
         self.cheese = self.f.create_cheese()
