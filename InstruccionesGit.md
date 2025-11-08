@@ -36,13 +36,21 @@ ________________________________________
 
 Resumen comandos clave
 
-git remote add upstream (https://github.com/santiagoblaslaguzza/prograII.git)    # solo 1 vez
-git fetch upstream                         # traer cambios
-git checkout Valentin                    # cambiar a tu rama
-git checkout upstream/main -- carpeta/    # traer carpeta específica
-git add carpeta/
-git commit -m "Traer carpeta nueva"
-git merge upstream/main                    # traer todos los cambios (opcional)
-git push origin Valentin                   # subir cambios
-git stash                                 # guardar cambios temporales
-git stash pop                             # recuperar cambios
+git branch                  # 1 - Ver en que rama estas
+git Switch Valentín         # 2 - Cambiar de Rama
+git fetch                   # 3 - Descargar últimas actualizaciones
+git merge origin/main       # 4 - Fusionar cambios de main a tu rama
+git status                  # 5 - Ver status de archivos (qué cambió)
+git add .                   # 6 - Agregar archivos modificados al commit
+git commit -m "mensaje"     # 7 - Hacer commit y agregar comentario
+git pull                    # 8 - Traer actualizaciones de tu rama o main, por las dudas
+git push                    # 9 - Subir cambios a Github
+git pull                    # 10 - Volver a actualizar por las dudas 
+
+git pull                    # 1 - Actualizar archivos
+git push                    # 2 - Subir rama actualizada
+git switch main             # 3 - Cambiar a Main
+git pull                    # 4 - Actualizo Main
+git merge Valentin          # 5 - Unifico datos de la rama Valentin al main
+git push                    # 6 - Subo Main Actualizado
+git switch Valentin         # 7 - Me vuelvo a cambiar a rama Valentin
