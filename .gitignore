@@ -1,9 +1,27 @@
 # Entorno Virtual de Python
 # El Proyecto/venv/ no es necesario, ya que el venv/ ignora todas las carpetas con ese nombre
 Proyecto/venv/ 
-venv/
+venv*/
+.venv/
 
 # Archivos de caché de Python
 __pycache__/
 *.pyc
 *.pyd
+
+# VSCode
+.vscode/
+
+# env files
+.env
+
+# Base de datos
+# Ignorar el archivo de base de datos SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# Ignoramos las carpetas que no son del proyecto
+factory/
+decorator/
+observer/

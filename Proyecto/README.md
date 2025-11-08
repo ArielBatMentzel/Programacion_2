@@ -1,4 +1,58 @@
-# Estructura del Proyecto
+======================================================= 
+GUÍA PARA CREAR, ACTIVAR Y ACTUALIZAR EL ENTORNO VIRTUAL 
+======================================================= 
+Cada integrante debe seguir estos pasos una sola vez al inicio 
+del proyecto y luego cuando se agreguen librerías nuevas. 
+
+
+
+## 0.(Solo la primera vez) Crear el entorno virtual: 
+python -m venv venv 
+
+## 1. Activar el entorno virtual (cada vez que se trabaje en el proyecto): 
+.\venv\Scripts\activate 
+
+## 2. Instalar las librerías desde requirements.txt: 
+pip install -r requirements.txt
+
+## 3. Actualizar requirements.txt cuando se instalen nuevas librerías: 
+pip freeze > requirements.txt 
+
+## 4. Desactivar el entorno virtual (opcional): 
+deactivate 
+
+
+## Exepciones: En el paso 2 Valen debe ejecutar: 
+pip install -r C:\Users\casti\Documents\GitHub\Proyectos_programacion2\Programacion_2\Proyecto\requirements.txt.txt
+
+
+
+======================================================= 
+LIBRERÍAS UTILIZADAS
+======================================================= 
+
+requests==2.32.3          # Para acceder a APIs o páginas web
+beautifulsoup4==4.12.3    # Para procesar HTML (scraping)
+pandas==2.2.2             # Para manejar tablas y CSVs
+selenium==4.21.0          # Para automatizar navegadores
+webdriver-manager==4.0.1  # Para gestionar drivers (Chrome, Edge, etc.)
+schedule==1.2.1           # Para tareas automáticas
+matplotlib==3.9.2
+numpy==1.24.3
+fastapi==0.102.0
+uvicorn[standard]==0.23.1
+pydantic==2.7.0
+typing-extensions==4.8.0
+httpx==0.24.0
+python-dotenv==1.0.0
+pytest==8.3.2
+loguru==0.7.0
+
+
+
+======================================================= 
+ESTRUCTURA DEL PROYECTO
+======================================================= 
 
 proyecto/
 │
@@ -37,4 +91,8 @@ proyecto/
 |
 ├── requirements.txt         # Dependencias del proyecto
 |
+<<<<<<< HEAD
 └── README.md
+=======
+└── README.md
+>>>>>>> origin/main
