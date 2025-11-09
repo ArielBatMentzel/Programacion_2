@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 
 # Carpeta actual donde están los scrapers y este script
 source_dir = os.path.dirname(__file__)
@@ -14,7 +15,7 @@ def run_scraper(scraper):
     
     # Ejecutar scraper, silenciando solo stdout (prints) pero mostrando errores
     result = subprocess.run(
-        ["python", path],
+        [sys.executable, path], # El sys.executable permite utilizar el python actualmente en uso (y no obliga a usar el global)
         stdout=subprocess.DEVNULL,  # prints silenciados
         stderr=None,                # errores se muestran en consola
         text=True

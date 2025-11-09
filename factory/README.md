@@ -9,6 +9,7 @@ El objetivo es que, al finalizar, puedas:
   * **Identificar** los problemas de mantenimiento y rigidez causados por la instanciación directa de objetos.
   * **Aplicar** los patrones de fábrica para desacoplar el código cliente de las clases concretas.
   * **Comprender** las diferencias, ventajas y desventajas entre Simple Factory, Factory Method y Abstract Factory.
+  * **Extender** un diseño existente que utiliza estos patrones, respetando principios como el **Open-Closed Principle (OCP)** y el **Dependency Inversion Principle (DIP)**.
   * **Extender** un diseño existente que utiliza estos patrones, respetando principios como el **Open-Closed Principle (OCP)**
   las entidades de software (como clases, módulos o funciones) deben estar abiertas para su extensión, pero cerradas para su modificación
    y el **Dependency Inversion Principle (DIP)**.
@@ -136,3 +137,21 @@ La calidad es clave en Objectville. Debes escribir pruebas para asegurar que el 
 4.  La entrega final será el enlace a tu repositorio de GitHub.
 
 **¡Mucha suerte y a codificar\!**
+
+
+
+
+
+
+
+
+
+
+
+## Decisiones de diseño
+Primero tuvimos que investigar, haciendo pruebas con el main, para entender el flujo de información de las clases
+
+Luego empezamos a retocar los scripts dentro de la carpeta factory method para permitir a nuestro negocio implementar nuevos sabores de pizza para cada tienda. 
+Para comprobar que todo funcionara correctamente modificamos el main y empezamos a testear nuestras nuevas implementaciones.
+
+problemas importando con imports relativos (uso del .pizza) e imports absoultos. Asi que pasamos a usar todos imports absoultos para que no rompa y se pueda ejecutar tanto desde el main como desde la terminal con pytest.

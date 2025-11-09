@@ -13,7 +13,7 @@ def main():
     print("Bienvenido a Starbuzz Coffee!")
     print("--- Preparando pedidos ---")
         
-    print("----- TP Nivel 1 -----") # Implementar Caramel
+    print("-----  TP Nivel 1  -----") # Implementar Caramel
     # Pedido 4: Un Decaf Grande con Caramel
     beverage4 = Decaf()
     beverage4.set_size('Grande')

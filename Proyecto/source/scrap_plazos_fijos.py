@@ -10,7 +10,7 @@ print("Inicio del scraping de plazos fijos...")
 
 # Ruta de la base existente
 carpeta_script = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros.db")
+db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db")
 os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Asegura que exista la carpeta
 
 # Inicializar driver headless
@@ -55,8 +55,12 @@ print(f"✅ Datos extraídos: {len(data)} filas")
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
+# 🟢 CAMBIO 1: eliminar la tabla anterior si existe
+cursor.execute("DROP TABLE IF EXISTS plazos_fijos")
+
+# 🟢 CAMBIO 2: crear tabla desde cero (sin IF NOT EXISTS)
 cursor.execute("""
-CREATE TABLE IF NOT EXISTS plazos_fijos (
+CREATE TABLE plazos_fijos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     banco TEXT,
     plazo TEXT,
@@ -64,13 +68,13 @@ CREATE TABLE IF NOT EXISTS plazos_fijos (
 )
 """)
 
-for fila in data:
-    cursor.execute("""
-    INSERT INTO plazos_fijos (banco, plazo, tasa_pct)
-    VALUES (?, ?, ?)
-    """, fila)
+# 🟢 CAMBIO 3: insertar todos los registros de una vez
+cursor.executemany("""
+INSERT INTO plazos_fijos (banco, plazo, tasa_pct)
+VALUES (?, ?, ?)
+""", data)
 
 conn.commit()
 conn.close()
-print(f"✅ Datos guardados en la base existente: {db_path}")
+print(f"✅ Tabla reemplazada y datos guardados en: {db_path}")
 print("Fin del scraping de plazos fijos.")
