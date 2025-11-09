@@ -1,9 +1,8 @@
 # archivo: Proyecto/utils/scrap_runner.py
-import asyncio
 import subprocess
-from typing import List
 import time
 import os
+from typing import List
 
 # Base de scrapers
 SCRAPERS_DIR = os.path.join(os.path.dirname(__file__), "..", "source")
@@ -17,9 +16,7 @@ SCRAPERS_MAP = {
     "bandas": "scrap_bandas_cambiarias.py"
 }
 
-MAX_CONCURRENCY = 3
-
-async def run_scraper(nombre: str):
+def run_scraper_blocking(nombre: str):
     archivo = SCRAPERS_MAP.get(nombre)
     if not archivo:
         print(f"❌ No se encontró scraper para '{nombre}'")
@@ -33,38 +30,37 @@ async def run_scraper(nombre: str):
     print(f"▶ Ejecutando {archivo} ...")
     start = time.time()
     
-    import sys
-
-    proc = await asyncio.create_subprocess_exec(
-        sys.executable, path,  # 👈 usa el mismo intérprete actual
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    
-    stdout, stderr = await proc.communicate()
-    
-    if stdout:
-        print(stdout.decode().strip())
-    if stderr:
-        print(stderr.decode().strip())
-    
-    elapsed = time.time() - start
-    if proc.returncode == 0:
-        print(f"✅ {archivo} finalizó correctamente en {elapsed:.2f} s.")
-    else:
-        print(f"❌ {archivo} falló con código {proc.returncode} en {elapsed:.2f} s.")
-
-
-async def _scrap_limited(names: List[str]):
-    semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
-
-    async def sem_task(name):
-        async with semaphore:
-            await run_scraper(name)
-    
-    await asyncio.gather(*(sem_task(name) for name in names))
-
+    try:
+        result = subprocess.run(
+            ["python", path],  # o sys.executable para usar el mismo intérprete
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        if result.stdout:
+            print(result.stdout.strip())
+        if result.stderr:
+            print(result.stderr.strip())
+        print(f"✅ {archivo} finalizó correctamente en {time.time()-start:.2f} s.")
+    except subprocess.CalledProcessError as e:
+        print(f"❌ {archivo} falló con código {e.returncode} en {time.time()-start:.2f} s.")
+        if e.stdout:
+            print(e.stdout.strip())
+        if e.stderr:
+            print(e.stderr.strip())
 
 def scrap(nombres: List[str]):
-    """Ejemplo: scrap(["bono","plazo_fijo"])"""
-    asyncio.run(_scrap_limited(nombres))
+    """
+    Ejecuta los scrapers de manera síncrona.
+    
+    Posibles:
+    "dolar"
+    "plazo_fijo"
+    "bono"
+    "letras"
+    "bandas"
+    
+    Ejemplo: scrap(["bono","plazo_fijo"])
+    """
+    for name in nombres:
+        run_scraper_blocking(name)

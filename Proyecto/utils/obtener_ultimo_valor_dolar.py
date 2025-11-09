@@ -1,15 +1,13 @@
 import sqlite3
 import os
-from Proyecto.utils.scrapper import scrap
+from .scrapper import scrap
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "db", "datos_financieros", "datos_financieros.db")
-
+#DB_PATH = os.path.join(os.path.dirname(__file__), "db", "datos_financieros", "datos_financieros.db")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "db", "datos_financieros", "datos_financieros.db")
 
 def obtener_ultimo_valor_dolar(tipo="DÓLAR BLUE"):
-    """
-    Devuelve el último valor de venta del dólar para el tipo indicado.
-    """
-    # Scrappeamos el último valor del dólar
+    # Scrappeamos el último valor
     scrap(["dolar"])
     
     conn = sqlite3.connect(DB_PATH)
