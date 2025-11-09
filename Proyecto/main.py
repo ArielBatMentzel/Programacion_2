@@ -55,16 +55,16 @@ async def inicio():
 async def hello_world():
     return {"hello": "world"}
 
-# 🔹 Endpoint para obtener precio del dólar actual
-@cotizar.get(
-    "/dolar", 
-    summary="Precio del dólar hoy", 
-    description="Devuelve el valor de venta actual del dólar tipo BLUE. Ejecuta un scrapper para obtener el valor más reciente."
-)
+@cotizar.get("/dolar")
 async def mostrar_dolar_hoy():
     loop = asyncio.get_running_loop()
-    valor = await loop.run_in_executor(None, obtener_ultimo_valor_dolar)
-    return {"Dólar hoy": valor}
+    try:
+        valor = await loop.run_in_executor(None, obtener_ultimo_valor_dolar)
+        return {"Dólar hoy": valor}
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        return {"error": str(e)}
 
 # 🔹 Ruta al archivo de base de datos
 DB_PATH = os.path.join(os.path.dirname(__file__), "db", "datos_financieros", "datos_financieros.db")

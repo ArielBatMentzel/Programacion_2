@@ -1,10 +1,9 @@
-import sqlite3
 import os
+import sqlite3
 from .scrapper import scrap
 
-#DB_PATH = os.path.join(os.path.dirname(__file__), "db", "datos_financieros", "datos_financieros.db")
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_PATH = os.path.join(BASE_DIR, "db", "datos_financieros", "datos_financieros.db")
+# Ruta segura a la DB desde utils
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "datos_financieros", "datos_financieros.db")
 
 def obtener_ultimo_valor_dolar(tipo="DÓLAR BLUE"):
     # Scrappeamos el último valor
