@@ -1,10 +1,12 @@
 # archivo: Proyecto/utils/scrap_runner.py
-import subprocess
-import time
 import os
+import sys
+import time
 from typing import List
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import subprocess
 
-# Base de scrapers
+# Carpeta donde están los scrapers
 SCRAPERS_DIR = os.path.join(os.path.dirname(__file__), "..", "source")
 
 # Map "nombre fácil" -> archivo dentro de source/
@@ -15,6 +17,8 @@ SCRAPERS_MAP = {
     "letras": "scrap_letras.py",
     "bandas": "scrap_bandas_cambiarias.py"
 }
+
+MAX_CONCURRENCY = 3  # Cantidad máxima de scrapers ejecutándose a la vez
 
 def run_scraper_blocking(nombre: str):
     archivo = SCRAPERS_MAP.get(nombre)
@@ -29,38 +33,36 @@ def run_scraper_blocking(nombre: str):
 
     print(f"▶ Ejecutando {archivo} ...")
     start = time.time()
-    
+
     try:
         result = subprocess.run(
-            ["python", path],  # o sys.executable para usar el mismo intérprete
+            [sys.executable, path],
             capture_output=True,
             text=True,
-            check=True
+            check=False
         )
         if result.stdout:
             print(result.stdout.strip())
         if result.stderr:
             print(result.stderr.strip())
-        print(f"✅ {archivo} finalizó correctamente en {time.time()-start:.2f} s.")
-    except subprocess.CalledProcessError as e:
-        print(f"❌ {archivo} falló con código {e.returncode} en {time.time()-start:.2f} s.")
-        if e.stdout:
-            print(e.stdout.strip())
-        if e.stderr:
-            print(e.stderr.strip())
+
+        elapsed = time.time() - start
+        if result.returncode == 0:
+            print(f"✅ {archivo} finalizó correctamente en {elapsed:.2f} s.")
+        else:
+            print(f"❌ {archivo} falló con código {result.returncode} en {elapsed:.2f} s.")
+    except Exception as e:
+        print(f"❌ Error ejecutando {archivo}: {e}")
 
 def scrap(nombres: List[str]):
     """
-    Ejecuta los scrapers de manera síncrona.
+    Función principal para llamar desde FastAPI u otras partes.
+    Ejecuta los scrapers usando ThreadPoolExecutor con límite de concurrencia.
     
-    Posibles:
-    "dolar"
-    "plazo_fijo"
-    "bono"
-    "letras"
-    "bandas"
-    
+    Posibles nombres: "dolar", "plazo_fijo", "bono", "letras", "bandas"
     Ejemplo: scrap(["bono","plazo_fijo"])
     """
-    for name in nombres:
-        run_scraper_blocking(name)
+    with ThreadPoolExecutor(max_workers=MAX_CONCURRENCY) as executor:
+        futures = [executor.submit(run_scraper_blocking, name) for name in nombres]
+        for _ in as_completed(futures):
+            pass
