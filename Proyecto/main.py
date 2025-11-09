@@ -25,7 +25,6 @@ http://127.0.0.1:8000/docs → documentación interactiva
 
 
 http://127.0.0.1:8000/ → mensaje de inicio
-http://127.0.0.1:8000/hello → prueba hello
 http://127.0.0.1:8000/dolar → dólar
 http://127.0.0.1:8000/cotizaciones → tabla de base de datos
 http://127.0.0.1:8000/exportar → descarga CSV
@@ -37,6 +36,9 @@ cotizar = FastAPI(title="CotizAR API")
 # 🔹 Registrar router de autenticación
 cotizar.include_router(auth_router)
 
+# 🔹 Ruta al archivo de base de datos
+DB_PATH = os.path.join(os.path.dirname(__file__), "db", "datos_financieros", "datos_financieros.db")
+#######################################################################################################################################
 # 🔹 Endpoint principal
 @cotizar.get(
     "/", 
@@ -46,15 +48,7 @@ cotizar.include_router(auth_router)
 async def inicio():
     return {"mensaje": "API CotizAR funcionando correctamente"}
 
-# 🔹 Endpoint de prueba hello_world
-@cotizar.get(
-    "/hello", 
-    summary="Prueba Hello World", 
-    description="Endpoint de prueba que devuelve un saludo simple."
-)
-async def hello_world():
-    return {"hello": "world"}
-
+#######################################################################################################################################
 @cotizar.get("/dolar")
 async def mostrar_dolar_hoy():
     loop = asyncio.get_running_loop()
@@ -66,9 +60,8 @@ async def mostrar_dolar_hoy():
         print(traceback.format_exc())
         return {"error": str(e)}
 
-# 🔹 Ruta al archivo de base de datos
-DB_PATH = os.path.join(os.path.dirname(__file__), "db", "datos_financieros", "datos_financieros.db")
 
+#######################################################################################################################################
 # 🔹 Función para obtener los datos de la base de datos
 def obtener_datos():
     conexion = sqlite3.connect(DB_PATH)
@@ -93,6 +86,7 @@ async def mostrar_cotizaciones():
     except Exception as e:
         return {"error": str(e)}
 
+#######################################################################################################################################
 # 🔹 Endpoint para exportar la tabla como CSV
 @cotizar.get(
     "/exportar_dolar",
