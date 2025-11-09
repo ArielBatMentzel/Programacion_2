@@ -2,8 +2,25 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import os
+from auth.auth_api import router as auth_router
+from prueba import obtener_ultimo_valor_dolar
+from pathlib import Path
+import sqlite3
+import pandas as pd
+from fastapi.responses import StreamingResponse
+from io import StringIO
 
-# puto
+
+cotizar = FastAPI(title="CotizAR API - Autenticación")
+
+# Registrar router de autenticación
+cotizar.include_router(auth_router)
+
+@cotizar.get("/")
+def inicio():
+    return {"mensaje": "API CotizAR funcionando correctamente"}
+
+
 
 """    
 Poner los endpoints en los archivos correctos 
@@ -11,6 +28,7 @@ Poner los endpoints en los archivos correctos
 Seguir mas o menos como estan en el docs de API CotizAR
 """
 
+"""
 
 
 # NOTA: Para iniciar el servidor se usa: `Uvicorn main:app --reload` y se cierra con `control + c`
@@ -25,7 +43,6 @@ async def hello_world():
 
 
 
-from prueba import obtener_ultimo_valor_dolar
 
 # Endpoint, obtener precio del dólar actual
 # Agregar que cuando 
@@ -36,10 +53,7 @@ async def mostrar_dolar_hoy():
         "Dólar hoy": valor
     }
     
-    
-from fastapi import FastAPI
-import sqlite3
-from pathlib import Path
+
 
 cotizar = FastAPI(title="Ejemplo API con Base de Datos")
 
@@ -79,15 +93,6 @@ async def mostrar_cotizaciones():
 
 
 
-
-
-
-import sqlite3
-import pandas as pd
-from fastapi import FastAPI
-from fastapi.responses import StreamingResponse
-from io import StringIO
-
 cotizar = FastAPI()
 # Endpoint para guardar como CSV la tabla
 @cotizar.get("/exportar")
@@ -110,3 +115,7 @@ def exportar_csv():
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=usuarios.csv"}
     )
+
+
+
+"""
