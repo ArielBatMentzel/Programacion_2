@@ -40,19 +40,37 @@ def registrar_usuario(datos: UsuarioCrear):                                #Mode
 
 @router.post("/iniciar_sesion")
 def iniciar_sesion(form_data: OAuth2PasswordRequestForm = Depends()):
-
     """
-    Recibe: OAuth2PasswordRequestForm que espera los campos username y password. 
-    Función: Verifica credenciales y devuelve un token JWT."""
+    Recibe: OAuth2PasswordRequestForm que espera los campos username y password.
+    Función: Verifica credenciales, genera un token JWT y guarda la sesión.
+    """
 
-    usuario = db_usuarios.buscar_usuario_por_nombre(form_data.username)            # Buscamos el usuario en la base de datos
+    from datetime import datetime, timedelta
+    from models.user import Session  # Importá tu modelo de sesión
 
-    if not usuario or not verificar_contraseña(form_data.password, usuario["hashed_password"]): # Si no coinciden las credenciales tira error. 
+    usuario = db_usuarios.buscar_usuario_por_nombre(form_data.username)
+
+    if not usuario or not verificar_contraseña(form_data.password, usuario["hashed_password"]):
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
-    token = crear_token_acceso({"sub": usuario["username"]})            # Creamos el token JWT con el nombre de usuario como sujeto
-    return {"access_token": token, "token_type": "bearer"}
+    # Crear token JWT
+    token = crear_token_acceso({"sub": usuario["username"]})
 
+    # Obtener ID del usuario (necesario para guardar sesión)
+    usuario_id = db_usuarios.obtener_id_usuario(usuario["username"])
+    if not usuario_id:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    # Crear y guardar sesión
+    sesion = Session(
+        token=token,
+        usuario_id=usuario_id,
+        fecha_inicio=str(datetime.now()),
+        fecha_expiracion=str(datetime.now() + timedelta(hours=2))
+    )
+    db_usuarios.guardar_sesion(sesion)
+
+    return {"access_token": token, "token_type": "bearer"}
 
 
 # ================================

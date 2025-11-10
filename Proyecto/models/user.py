@@ -38,16 +38,16 @@ class Session:
     Representa una sesión activa de un usuario.
     Atributos:
         - token: identificador único de la sesión
-        - usuario: instancia de User
+        - usuario_id: id del usuario (entero)
+        - fecha_inicio: datetime de inicio de sesión
         - fecha_expiracion: datetime de expiración de la sesión
     """
 
-    def __init__(self, token: str, usuario: User, fecha_expiracion: datetime):
-        
+    def __init__(self, token: str, usuario_id: int, fecha_inicio: datetime, fecha_expiracion: datetime):
         self.token = token
-        self.usuario = usuario
+        self.usuario_id = usuario_id
+        self.fecha_inicio = fecha_inicio
         self.fecha_expiracion = fecha_expiracion
-
 
 # ================================================================
 # MODELOS Pydantic (USADOS EN LA API / VALIDACIÓN DE DATOS)

@@ -96,6 +96,15 @@ class DataBaseUsuario(AbstractDatabase):
                 }
             return None
 
+    def obtener_id_usuario(self, username: str) -> Optional[int]:
+        """
+        Devuelve el ID del usuario según su nombre.
+        """
+        with sqlite3.connect(self.conexion) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM usuarios WHERE username = ?", (username,))
+            fila = cursor.fetchone()
+            return fila[0] if fila else None
 
     # ==============================
     # MÉTODOS DE USUARIOS
