@@ -7,7 +7,7 @@ import sqlite3
 from pathlib import Path
 
 # Ruta hacia la base de datos
-RUTA_DB = Path(__file__).resolve().parent.parent / "datos_financieros" / "datos_financieros.db"
+RUTA_DB = Path(__file__).resolve().parent.parent / "usuarios" / "usuarios.db"
 
 class DataBaseUsuario(AbstractDatabase):
     """

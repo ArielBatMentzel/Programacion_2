@@ -8,7 +8,7 @@ from db.usuarios.users_db import DataBaseUsuario
 from db.usuarios.users_db import RUTA_DB
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
-db_usuarios = DataBaseUsuario(RUTA_DB)
+db_usuarios = DataBaseUsuario(str(RUTA_DB))
 
 
 # ================================
