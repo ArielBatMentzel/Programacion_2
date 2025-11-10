@@ -91,8 +91,4 @@ proyecto/
 |
 ├── requirements.txt         # Dependencias del proyecto
 |
-<<<<<<< HEAD
 └── README.md
-=======
-└── README.md
->>>>>>> origin/main

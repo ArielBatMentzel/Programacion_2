@@ -1,54 +1,68 @@
-# auth/auth_api.py
-"""
-Módulo de autenticación de la API CotizAR.
+# api/auth_api.py
 
-Este archivo define un router de FastAPI para endpoints relacionados
-con autenticación de usuarios (login, registro, verificación, etc.).
-Actualmente se incluye un ejemplo mínimo para probar la integración.
-"""
+from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi.security import OAuth2PasswordRequestForm
+from auth.auth_service import (crear_hash_contraseña, verificar_contraseña, crear_token_acceso, obtener_usuario_actual)
+from models.user import UsuarioCrear, UsuarioPublico, Token
+from db.usuarios.users_db import DataBaseUsuario
+from db.usuarios.users_db import RUTA_DB
 
-from fastapi import APIRouter, HTTPException
+router = APIRouter(prefix="/auth", tags=["Autenticación"])
+db_usuarios = DataBaseUsuario(RUTA_DB)
 
-# Crear un router independiente para la autenticación
-router = APIRouter(
-    prefix="/auth",           # Prefijo común para todos los endpoints de este router
-    tags=["Autenticación"]    # Categoría para la documentación automática de FastAPI
-)
 
-# Ejemplo de endpoint de prueba
-@router.get("/ping")
-async def ping():
-    """
-    Endpoint de prueba para verificar que el router funciona.
+# ================================
+# REGISTRO DE NUEVOS USUARIOS
+# ================================
+
+
+@router.post("/registrar", status_code=201)
+def registrar_usuario(datos: UsuarioCrear):                                #Modelo UsuarioCrear que contiene nombre, contraseña y nombre completo. 
+    """Crea un nuevo usuario en la base de datos."""
     
-    GET /auth/ping
-    Retorna un mensaje simple.
-    """
-    return {"mensaje": "pong"}
+    usuario_existente = db_usuarios.buscar_usuario_por_nombre(datos.nombre_usuario)
+    if usuario_existente:
+        raise HTTPException(
+            status_code=400, detail= "El nombre de usuario ya existe."
+        )
 
-# Ejemplo de endpoint de login (simulación)
-@router.post("/login")
-async def login(usuario: str, clave: str):
-    """
-    Endpoint de login simulado.
-    
-    Parámetros:
-    - usuario: nombre de usuario
-    - clave: contraseña
-    
-    Retorna un mensaje de éxito si las credenciales son "admin"/"1234", 
-    de lo contrario lanza un error 401.
-    """
-    if usuario == "admin" and clave == "1234":
-        return {"mensaje": "Login exitoso"}
-    raise HTTPException(status_code=401, detail="Credenciales inválidas")
+    contraseña_segura = crear_hash_contraseña(datos.contraseña)             #Hasheamos la contraseña para guardarla segura en la base de datos
+    db_usuarios.crear_usuario(datos.nombre_usuario, contraseña_segura, datos.nombre_completo)
 
-# Ejemplo de endpoint de registro (simulación)
-@router.post("/registro")
-async def registro(usuario: str, clave: str):
+    return {"mensaje": "Usuario registrado correctamente"}
+
+
+
+# ================================
+# LOGIN Y GENERACIÓN DE TOKEN
+# ================================
+
+
+@router.post("/iniciar_sesion")
+def iniciar_sesion(form_data: OAuth2PasswordRequestForm = Depends()):
+
     """
-    Endpoint de registro simulado.
+    Recibe: OAuth2PasswordRequestForm que espera los campos username y password. 
+    Función: Verifica credenciales y devuelve un token JWT."""
+
+    usuario = db_usuarios.buscar_usuario_por_nombre(form_data.username)            # Buscamos el usuario en la base de datos
+
+    if not usuario or not verificar_contraseña(form_data.password, usuario["hashed_password"]): # Si no coinciden las credenciales tira error. 
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+
+    token = crear_token_acceso({"sub": usuario["username"]})            # Creamos el token JWT con el nombre de usuario como sujeto
+    return {"access_token": token, "token_type": "bearer"}
+
+
+
+# ================================
+# RUTA PROTEGIDA (PERFIL)
+# ================================
+
+
+@router.get("/yo", response_model=UsuarioPublico)
+async def obtener_perfil(usuario_actual: UsuarioPublico = Depends(obtener_usuario_actual)):
     
-    Actualmente no guarda datos, solo devuelve un mensaje de confirmación.
-    """
-    return {"mensaje": f"Usuario '{usuario}' registrado correctamente"}
+    """Devuelve los datos del usuario autenticado."""
+    
+    return usuario_actual

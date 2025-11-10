@@ -22,18 +22,18 @@ class DataBaseUsuario(AbstractDatabase):
     
     def _crear_tablas(self):
         """Crea las tablas, si no existen."""
+       
         with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS usuarios (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    tipo TEXT,
-                    nombre TEXT,
-                    contraseña TEXT,
-                    email TEXT UNIQUE,
-                    telefono INTEGER,
+                    username TEXT UNIQUE,
                     hashed_password TEXT,
-                    full_name TEXT
+                    full_name TEXT,
+                    tipo TEXT,
+                    email TEXT UNIQUE,
+                    telefono INTEGER
                 )
             """)
             cursor.execute("""
@@ -55,41 +55,45 @@ class DataBaseUsuario(AbstractDatabase):
     # ========================================================
 
 
-    def crear_usuario(nombre_usuario: str, contraseña_hash: str, nombre_completo: str = ""):
+    def crear_usuario(self, 
+                      nombre_usuario: str, 
+                      contraseña_hash: str, 
+                      nombre_completo: str = "", 
+                      tipo: str = "normal", 
+                      email: Optional[str] = None, 
+                      telefono: Optional[int] = None):
         """Inserta un nuevo usuario compatible con el sistema JWT."""
-        with sqlite3.connect(RUTA_DB) as conn:
+        
+        with sqlite3.connect(self.conexion) as conn:
+            
             cursor = conn.cursor()
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT UNIQUE,
-                    hashed_password TEXT,
-                    full_name TEXT
-                )
-            """)
-            cursor.execute("""
-                INSERT INTO usuarios (username, hashed_password, full_name)
-                VALUES (?, ?, ?)
-            """, (nombre_usuario, contraseña_hash, nombre_completo))
+                INSERT INTO usuarios (username, hashed_password, full_name, tipo, email, telefono)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (nombre_usuario, contraseña_hash, nombre_completo, tipo, email, telefono))
             conn.commit()
 
 
-    def buscar_usuario_por_nombre(nombre_usuario: str):
-        """Busca un usuario por nombre de usuario y devuelve un diccionario."""
-        with sqlite3.connect(RUTA_DB) as conn:
+    def buscar_usuario_por_nombre(self, nombre_usuario: str):
+        """Busca un usuario por su nombre de usuario y devuelve un diccionario."""
+        
+        with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username TEXT UNIQUE,
-                    hashed_password TEXT,
-                    full_name TEXT
-                )
-            """)
-            cursor.execute("SELECT username, hashed_password, full_name FROM usuarios WHERE username = ?", (nombre_usuario,))
+                SELECT username, hashed_password, full_name, tipo, email, telefono
+                FROM usuarios
+                WHERE username = ?
+            """, (nombre_usuario,))
             fila = cursor.fetchone()
             if fila:
-                return {"username": fila[0], "hashed_password": fila[1], "full_name": fila[2]}
+                return {
+                    "username": fila[0],
+                    "hashed_password": fila[1],
+                    "full_name": fila[2],
+                    "tipo": fila[3],
+                    "email": fila[4],
+                    "telefono": fila[5]
+                }
             return None
 
 
@@ -100,14 +104,15 @@ class DataBaseUsuario(AbstractDatabase):
 
 
     def guardar(self, usuario: User):
-        """Guarda un usuario nuevo."""
+        """Guarda un usuario nuevo desde modelo User."""
+        
         with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             try:
                 cursor.execute("""
-                    INSERT INTO usuarios (nombre, contraseña, email, tipo, telefono)
-                    VALUES (?, ?, ?, ?, ?)
-                """, (usuario.nombre, usuario.contraseña, usuario.email, usuario.tipo, usuario.telefono))
+                    INSERT INTO usuarios (username, hashed_password, full_name, tipo, email, telefono)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """, (usuario.nombre, usuario.contraseña, usuario.nombre, usuario.tipo, usuario.email, usuario.telefono))
                 conn.commit()
                 return True
             except sqlite3.IntegrityError:
@@ -115,6 +120,7 @@ class DataBaseUsuario(AbstractDatabase):
 
     def eliminar(self, id: str) -> bool:
         """Elimina un usuario y sus sesiones."""
+        
         with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM sesiones WHERE usuario_id = ?", (id,))
@@ -122,61 +128,76 @@ class DataBaseUsuario(AbstractDatabase):
             conn.commit()
             return cursor.rowcount > 0
 
+    
     def consultar(self, campo: Optional[str] = None, valor: Optional[str] = None) -> List[User]:
         """Devuelve los usuarios, opcionalmente filtrados."""
         usuarios_encontrados = []
-
         with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             if campo and valor:
-                if campo not in {"id", "tipo", "nombre", "contraseña", "email", "telefono"}:
+                if campo not in {"id", "username", "full_name", "tipo", "email", "telefono"}:
                     raise ValueError(f"Campo no válido: {campo}")
-                consulta = f"""
-                    SELECT id, tipo, nombre, contraseña, email, telefono
-                    FROM usuarios
-                    WHERE {campo} = ?
-                """
+                consulta = f"SELECT id, username, full_name, tipo, email, telefono FROM usuarios WHERE {campo} = ?"
                 cursor.execute(consulta, (valor,))
             else:
-                cursor.execute("""
-                    SELECT id, tipo, nombre, contraseña, email, telefono
-                    FROM usuarios
-                """)
+                cursor.execute("SELECT id, username, full_name, tipo, email, telefono FROM usuarios")
             filas = cursor.fetchall()
             for fila in filas:
                 usuario = User(
-                    id=fila[0], tipo=fila[1], nombre=fila[2],
-                    contraseña=fila[3], email=fila[4], telefono=fila[5]
+                    email=fila[4],
+                    nombre=fila[2],
+                    tipo=fila[3]
                 )
                 usuarios_encontrados.append(usuario)
         return usuarios_encontrados
+    
+
+
+    # ==============================
+    # MÉTODOS DE ACTUALIZACIÓN DE USUARIOS
+    # ==============================
+
 
     def actualizar_campo(self, id_usuario: int, campo: str, valor) -> bool:
-        """Actualiza un campo de un usuario."""
-        campos_validos = {"tipo", "nombre", "contraseña", "email", "telefono"}
+        """
+        Actualiza un único campo del usuario.
+        :param id_usuario: id del usuario a modificar
+        :param campo: nombre del campo a actualizar
+        :param valor: nuevo valor
+        :return: True si se actualizó correctamente
+        """
+        campos_validos = {"username", "hashed_password", "full_name", "tipo", "email", "telefono"}
+
         if campo not in campos_validos:
-            raise ValueError(f"Campo '{campo}' no válido")
+            raise ValueError(f"Campo '{campo}' no válido para actualización")
+
         with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             consulta = f"UPDATE usuarios SET {campo} = ? WHERE id = ?"
             cursor.execute(consulta, (valor, id_usuario))
             conn.commit()
             return cursor.rowcount > 0
+        
+
 
     def actualizar_completo(self, usuario: User) -> bool:
-        """Actualiza todos los campos de un usuario."""
+        """
+        Actualiza todos los campos de un usuario (solo los no None).
+        :param usuario: instancia de User con id y valores nuevos
+        """
         campos_actualizados = 0
-        if usuario.tipo and self.actualizar_campo(usuario.id, "tipo", usuario.tipo):
-            campos_actualizados += 1
-        if usuario.nombre and self.actualizar_campo(usuario.id, "nombre", usuario.nombre):
-            campos_actualizados += 1
-        if usuario.contraseña and self.actualizar_campo(usuario.id, "contraseña", usuario.contraseña):
+
+        if usuario.nombre and self.actualizar_campo(usuario.id, "username", usuario.nombre):
             campos_actualizados += 1
         if usuario.email and self.actualizar_campo(usuario.id, "email", usuario.email):
             campos_actualizados += 1
+        if usuario.tipo and self.actualizar_campo(usuario.id, "tipo", usuario.tipo):
+            campos_actualizados += 1
         if usuario.telefono and self.actualizar_campo(usuario.id, "telefono", usuario.telefono):
             campos_actualizados += 1
+
         return campos_actualizados > 0
+    
 
 
 
@@ -188,6 +209,7 @@ class DataBaseUsuario(AbstractDatabase):
 
     def guardar_sesion(self, sesion: Session) -> bool:
         """Guarda una sesión activa."""
+        
         try:
             with sqlite3.connect(self.conexion) as conn:
                 cursor = conn.cursor()
@@ -200,6 +222,7 @@ class DataBaseUsuario(AbstractDatabase):
         except sqlite3.IntegrityError as e:
             print(f"Error al guardar sesión: {e}")
             return False
+
 
     def consultar_sesion(self, token: str) -> Optional[Session]:
         """Devuelve la sesión correspondiente al token."""
@@ -219,8 +242,10 @@ class DataBaseUsuario(AbstractDatabase):
                 )
             return None
 
+
     def eliminar_sesion(self, token: str) -> bool:
         """Elimina una sesión activa por su token."""
+        
         with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM sesiones WHERE token = ?", (token,))
