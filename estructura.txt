@@ -4,40 +4,46 @@ Proyecto/
     prueba.py
     README.md
     requirements.txt
+
     auth/
-        auth_service.py
         __init__.py
+       auth_api.py
+       auth_service.py
+
     db/
-        abstract_db.py
-        datos_financieros.db
-        datos_financieros/
-            crear_db_financieros.py
-            datos_financieros.db
-            __init__.py
-        usuarios/
-            users_db.py
-            usuarios.db
-            __init__.py
-    factory/
-        fixed_income_factory.py
         __init__.py
+        abstract_db.py
+        datos_financieros/
+             __init__.py
+            crear_db_financieros.py
+        usuarios/
+             __init__.py
+            users_db.py
+
+    factory/
+        __init__.py
+        fixed_income_factory.py
+
     models/
+        __init__.py
         alerta.py
         dolar.py
         instruments.py
         user.py
-        __init__.py
+
     source/
         scrap_all.py
         scrap_bandas_cambiarias.py
         scrap_bono.py
         scrap_dolar.py
         scrap_letras.py
-        scrap_plazos_fijos.py
+        scrap_plazos_fijos.
+        
     tests/
         test_alertas.py
         test_auth.py
         test_instruments.py
+
     utils/
         estructura.py
         helpers.py

@@ -23,7 +23,7 @@ deactivate
 
 
 ## Exepciones: En el paso 2 Valen debe ejecutar: 
-pip install -r C:\Users\casti\Documents\GitHub\Proyectos_programacion2\Programacion_2\Proyecto\requirements.txt.txt
+pip install -r C:\Users\casti\Documents\GitHub\Proyectos_programacion2\Programacion_2\Proyecto\requirements.txt
 
 
 

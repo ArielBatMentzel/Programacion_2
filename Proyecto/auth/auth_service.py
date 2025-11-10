@@ -1,77 +1,92 @@
-# archivo: auth/auth_service.py
 
-from typing import Optional
-from models.user import User, Session
-from Proyecto.db.usuarios.users_db import DataBaseUsuario
-import hashlib
-import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from fastapi import HTTPException, status, Depends
+from fastapi.security import OAuth2PasswordBearer
+from db.usuarios.users_db import buscar_usuario_por_nombre, DataBaseUsuario, RUTA_DB
+from models.user import UsuarioPublico
 
-class AuthService:
+
+
+# ======================
+# CONFIGURACIÓN GENERAL
+# ======================
+
+
+CLAVE_SECRETA = "perro_chancho_unsam_2025_!9xM4"        # esta es la CLAVE SECRETA
+    # La Clave Secreta NO debe compartirse o subirse al github, pero como este proyecto es base alpha aún no importa. 
+ALGORITMO = "HS256"
+MINUTOS_EXPIRACION_TOKEN = 60
+
+# Configuración del sistema de hash
+contexto_hash = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# OAuth2 indica que el token se obtendrá desde /auth/iniciar_sesion
+esquema_oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/iniciar_sesion")
+
+
+
+# ======================
+# FUNCIONES DE SEGURIDAD
+# ======================
+
+
+def crear_hash_contraseña(contraseña: str) -> str:
+    """Genera un hash seguro de la contraseña ingresada."""
+    return contexto_hash.hash(contraseña)
+
+def verificar_contraseña(contraseña_plana: str, contraseña_hasheada: str) -> bool:
+    """ Compara una contraseña ingresada con su versión hasheada.
+        Devuelve True si las contraseña coinciden, False si no.
     """
-    AuthService se encarga de:
-    - Gestionar usuarios y sesiones
-    - Autenticación y autorización
-    - Recuperación de contraseñas
-    """
+    return contexto_hash.verify(contraseña_plana, contraseña_hasheada)
 
-    def __init__(self, db: DataBaseUsuario):
-        """
-        Inicializa el servicio con acceso a la base de usuarios.
-        :param db: instancia de DataBaseUsuario
-        """
-        self.db = db
-        self.sesiones_activas = {}  # dict[token: Session]
 
-    def login(self, email: str, contrasena: str) -> Optional[str]:
-        """
-        Verifica credenciales y crea una sesión.
-        :param email: correo del usuario
-        :param contrasena: contraseña en texto plano
-        :return: token de sesión si es válido, None si falla
-        """
-        pass
 
-    def logout(self, token: str):
-        """
-        Termina la sesión activa asociada al token.
-        """
-        pass
+# ======================
+# FUNCIONES PARA TOKENS JWT
+# ======================
 
-    def crear_usuario(self, email: str, contrasena: str, tipo: str = "normal") -> User:
-        """
-        Crea un nuevo usuario y lo guarda en la base.
-        :param email: correo del usuario
-        :param contrasena: contraseña en texto plano
-        :param tipo: "admin" o "normal"
-        :return: instancia de User creada
-        """
-        pass
 
-    def recuperar_contrasena(self, email: str) -> bool:
-        """
-        Inicia el flujo de recuperación de contraseña para el usuario.
-        :param email: correo del usuario
-        :return: True si existe usuario y se envió correo, False si no existe
-        """
-        pass
+def crear_token_acceso(datos: dict, duracion: timedelta | None = None):
+    
+    """Crea un token JWT firmado con una fecha de expiración."""
+    
+    datos_a_codificar = datos.copy()
+    expiracion = datetime.now(timezone.utc) + (duracion or timedelta(minutes=MINUTOS_EXPIRACION_TOKEN))
+    datos_a_codificar.update({"exp": expiracion})
+    token_codificado = jwt.encode(datos_a_codificar, CLAVE_SECRETA, algorithm=ALGORITMO)
+    return token_codificado
 
-    def verificar_token(self, token: str) -> Optional[User]:
-        """
-        Verifica si un token es válido y devuelve el usuario asociado.
-        :param token: string de sesión
-        :return: User si es válido, None si no
-        """
-        pass
 
-    def _generar_token(self, longitud: int = 32) -> str:
-        """
-        Genera un token seguro para sesiones.
-        """
-        return secrets.token_hex(longitud)
+async def obtener_usuario_actual(token: str = Depends(esquema_oauth2)) -> UsuarioPublico:
+    
+    """Valida el JWT recibido y devuelve el usuario autenticado."""
+    
+    error_credenciales = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail= "Credenciales inválidas o token expirado.",
+            headers= {"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        # Decodificar el token con la clave y el algoritmo
+        carga_util = jwt.decode(token, CLAVE_SECRETA, algorithms=[ALGORITMO])
+        nombre_usuario: str = carga_util.get("sub")
+        
+        if nombre_usuario is None:
+            raise error_credenciales
+        
+    except JWTError:
+        raise error_credenciales
 
-    def _hashear_contrasena(self, contrasena: str) -> str:
-        """
-        Devuelve la contraseña hasheada usando SHA-256.
-        """
-        return hashlib.sha256(contrasena.encode()).hexdigest()
+    usuario = buscar_usuario_por_nombre(nombre_usuario)
+    
+    if not usuario:
+        raise error_credenciales
+
+    return UsuarioPublico(
+        nombre_usuario=usuario["username"],
+        nombre_completo=usuario.get("full_name", "")
+    )
+

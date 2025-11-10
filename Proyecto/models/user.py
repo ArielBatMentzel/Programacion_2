@@ -2,6 +2,12 @@
 
 from datetime import datetime
 from typing import Optional
+from pydantic import BaseModel, Field
+
+
+# ================================================================
+# PRIMEROS MODELOS SIMPLES
+# ================================================================
 
 class User:
     """
@@ -10,7 +16,7 @@ class User:
         - tipo: 'admin' o 'normal'
         - email: correo electrónico del usuario
         - nombre: nombre del usuario
-        - otros atributos opcionales según necesidad
+        - otros atributos opcionales según necesidad.
     """
 
     def __init__(self, email: str, nombre: str, tipo: str = "normal"):
@@ -19,16 +25,13 @@ class User:
         self.tipo = tipo
 
     def solicitar_datos(self):
-        """
-        Método para que el usuario solicite datos desde la API o DB.
-        """
+        """Método para que el usuario solicite datos desde la API o DB."""
         pass
 
     def consultar_instrumentos(self):
-        """
-        Permite al usuario consultar instrumentos financieros.
-        """
+        """Permite al usuario consultar instrumentos financieros."""
         pass
+
 
 class Session:
     """
@@ -40,21 +43,36 @@ class Session:
     """
 
     def __init__(self, token: str, usuario: User, fecha_expiracion: datetime):
+        
         self.token = token
         self.usuario = usuario
         self.fecha_expiracion = fecha_expiracion
 
 
-"""
-Sí, en este caso conviene que User y Session estén en el mismo archivo user.py, porque están 
-íntimamente relacionados:
+# ================================================================
+# MODELOS Pydantic (USADOS EN LA API / VALIDACIÓN DE DATOS)
+# ================================================================
 
-- Session no tiene sentido sin un User al que pertenezca.
+# Función de Pydantic Model: Nos permite definir la estructura de datos que se usarán en la FastApi. 
+# Entonces validará los datos que lleguen y estandarizará lo que devuelve la API. 
 
-- Facilita importar y mantener el código.
+class UsuarioCrear(BaseModel):
+    """ Modelo para registrar un nuevo usuario. """
+    
+    nombre_usuario: str = Field(..., min_length=3, max_length=20)
+    contraseña: str = Field(..., min_length=6)
+    nombre_completo: Optional[str] = None
 
-- Mantiene la consistencia con la estructura de modelos (models/).
 
-Solo separarías en archivos distintos si alguno de los dos fuera muy grande o complejo, 
-lo cual no aplica aquí.
-"""
+class UsuarioPublico(BaseModel):
+    """ Modelo para mostrar datos públicos del usuario. """
+    
+    nombre_usuario: str
+    nombre_completo: Optional[str] = None
+
+
+class Token(BaseModel):
+    """ Token JWT devuelto al iniciar sesión. """
+    
+    access_token: str
+    token_type: str = "bearer"
