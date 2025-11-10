@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional
 
+
 class AbstractDatabase(ABC):
     """
     Clase base abstracta para todas las bases de datos del proyecto.
