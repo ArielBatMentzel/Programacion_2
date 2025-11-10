@@ -65,4 +65,8 @@ async def _scrap_limited(names: List[str]):
 
 def scrap(nombres: List[str]):
     """Ejemplo: scrap(["bono","plazo_fijo"])"""
+<<<<<<< HEAD
     asyncio.run(_scrap_limited(nombres))
+=======
+    asyncio.run(_scrap_limited(nombres))
+>>>>>>> 2a2b0ebf9e48c8f81308d0b75bf2239c126b802f
