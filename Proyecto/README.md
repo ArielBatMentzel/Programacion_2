@@ -92,3 +92,84 @@ proyecto/
 ├── requirements.txt         # Dependencias del proyecto
 |
 └── README.md
+
+
+
+
+
+
+Docker (hay q emprolijar)
+# Definimos el python base que se va a utilizar para correr la imagen
+# y con eso construir el contenedor (contiene las librerias, código, etc)
+FROM python:3.11-slim
+
+# Creamos, si no existe, el directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copiamos solo el contenido que esta dentro de la carpeta Proyecto al contenedor
+# COPY . /app
+
+# Instalamos las dependencias dentro del contenedor usando el python base
+# RUN pip install --no-cache-dir -r requirements.txt
+
+# Exponer el puerto por donde la app va a recibir conexiones (x donde escucha peticiones)
+EXPOSE 8000
+
+"""
+Se le dice a Docker que cuando arranque el contenedor, ejecute estos 
+comandos para iniciar la aplicación.
+Uvicorn, servidor web que corre la API de python.
+main:cotizar, nombre del archivo y el de la variable donde se instancia FastAPI
+--host 0.0.0.0, le dice a uvicorn que acepte conexiones desde cualquier IP, no 
+solo desde dentro del contenedor (la local)
+-- port 8000, es el puerto del contenedor que expusimos antes.
+"""
+CMD ["uvicorn", "main:cotizar", "--host", "0.0.0.0", "--port", "8000"]
+
+
+# Asegurarse de estar en la carpeta Proyecto y no solo en Programacion_2 para ejecutalro.
+
+## Para construir la imagen localmente:
+En la terminal parado en la carpeta "Proyecto":
+docker build -t nombre-de-tu-imagen:latest .
+
+Explicación: 
+- docker build, crea la imange
+- -t nombre-de-tu-imagen:latest, le asigna un nombre y una etiqueta a la imagen
+- ., indica que el dockerfile esta en el directorio actual
+
+Ejemplo: 
+docker build -t cotizar-api:latest
+
+## Ejecutar la imagen localmente
+una vez construida, la probamos ejecutando que crea un contenedor
+docker run -p 8000:8000 cotizar-api:latest
+Explicacion: 
+- -p 8000:8000, mapea el puerto 8000 del contenedor al 8000 de nuestra máquina, así la podemos abrir en http://localhost:8000 en el navegado.
+- cotizar-api:latest, nombre de la imagen que construiste
+
+## Detener la app
+si la ejecutamos en primer plano, se detiene con ctrl + c.
+
+Para ejecutarla en segundo plano:
+docker run -d -p 8000:8000 cotizar-api:lates
+se detiene con:
+-d (significa detached)
+
+
+Si hay cambios en el código se vuelve a ejecutar en terminal (reemplaza todo lo que había con el código nuevo):
+1. docker build -t cotizar-api:latest .
+2. docker run -p 8000:8000 -e PORT=8000 cotizar-api:latest (para que funcione con render)
+
+o para crear el contenedor y que se borre solo cuando termina de ejecutarse:
+docker run --rm -p 8000:8000 cotizar-api:latest 
+
+activar docker:
+docker start id_docker o nombre_docker
+
+detener el docker:
+docker stop id_docker o nombre_docker
+
+detener todos los docker:
+docker stop $(docker ps -q)
+

@@ -1,53 +1,50 @@
 Proyecto/
-    config.py
+    .dockerignore
+    Dockerfile
     main.py
-    prueba.py
     README.md
     requirements.txt
-
     auth/
+        auth_api.py
+        auth_service.py
         __init__.py
-       auth_api.py
-       auth_service.py
-
     db/
-        __init__.py
         abstract_db.py
+        datos_financieros.db
         datos_financieros/
-             __init__.py
             crear_db_financieros.py
+            datos_financieros.db
+            __init__.py
         usuarios/
-             __init__.py
+            crear_admin.py
             users_db.py
-
+            usuarios.db
+            __init__.py
     factory/
-        __init__.py
         fixed_income_factory.py
-
-    models/
         __init__.py
+    models/
         alerta.py
         dolar.py
         instruments.py
         user.py
-
+        __init__.py
     source/
         scrap_all.py
         scrap_bandas_cambiarias.py
         scrap_bono.py
         scrap_dolar.py
         scrap_letras.py
-        scrap_plazos_fijos.
-        
+        scrap_plazos_fijos.py
     tests/
         test_alertas.py
         test_auth.py
         test_instruments.py
-
     utils/
-        estructura.py
+        armar_estructura_txt.py
         helpers.py
         obtener_banda_cambiaria.py
         obtener_ultimo_valor_dolar.py
         scrapper.py
+        test.py
         __init__.py
