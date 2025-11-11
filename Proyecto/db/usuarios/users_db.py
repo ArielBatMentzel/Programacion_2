@@ -50,6 +50,7 @@ class DataBaseUsuario(AbstractDatabase):
 
 
 
+
     # ========================================================
     # FUNCIONES DE ALTO NIVEL PARA AUTH_SERVICE Y AUTH_API
     # ========================================================
@@ -96,6 +97,15 @@ class DataBaseUsuario(AbstractDatabase):
                 }
             return None
 
+    def obtener_id_usuario(self, username: str) -> Optional[int]:
+        """
+        Devuelve el ID del usuario según su nombre.
+        """
+        with sqlite3.connect(self.conexion) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM usuarios WHERE username = ?", (username,))
+            fila = cursor.fetchone()
+            return fila[0] if fila else None
 
     # ==============================
     # MÉTODOS DE USUARIOS
@@ -118,15 +128,14 @@ class DataBaseUsuario(AbstractDatabase):
             except sqlite3.IntegrityError:
                 return False
 
-    def eliminar(self, id: str) -> bool:
+    def eliminar(self, id: int) -> bool:
         """Elimina un usuario y sus sesiones."""
-        
         with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM sesiones WHERE usuario_id = ?", (id,))
             cursor.execute("DELETE FROM usuarios WHERE id = ?", (id,))
             conn.commit()
-            return cursor.rowcount > 0
+        return True
 
     
     def consultar(self, campo: Optional[str] = None, valor: Optional[str] = None) -> List[User]:
@@ -249,5 +258,16 @@ class DataBaseUsuario(AbstractDatabase):
         with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM sesiones WHERE token = ?", (token,))
+            conn.commit()
+            return cursor.rowcount > 0
+        
+    def eliminar_sesion_por_usuario(self, nombre_usuario: str) -> bool:
+        """Elimina la sesión activa de un usuario dado su nombre de usuario."""
+        usuario_id = self.obtener_id_usuario(nombre_usuario)
+        if not usuario_id:
+            return False
+        with sqlite3.connect(self.conexion) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM sesiones WHERE usuario_id = ?", (usuario_id,))
             conn.commit()
             return cursor.rowcount > 0

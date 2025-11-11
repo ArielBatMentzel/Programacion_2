@@ -87,5 +87,6 @@ async def obtener_usuario_actual(token: str = Depends(esquema_oauth2)) -> Usuari
 
     return UsuarioPublico(
         nombre_usuario=usuario["username"],
-        nombre_completo=usuario.get("full_name", "")
+        nombre_completo=usuario["full_name"],
+        tipo=usuario["tipo"]  # <- esto es lo que falta
     )

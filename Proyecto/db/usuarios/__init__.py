@@ -1,10 +1,12 @@
-import sqlite3 
+import sqlite3
 from pathlib import Path
-RUTA_DB = Path(__file__).resolve().parent.parent / "usuarios" / "usuarios.db"
 
+RUTA_DB = Path(__file__).resolve().parent.parent / "usuarios" / "usuarios.db"
 
 with sqlite3.connect(RUTA_DB) as conn:
     cursor = conn.cursor()
+
+    # Crear tablas si no existen
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,6 +18,8 @@ with sqlite3.connect(RUTA_DB) as conn:
             telefono INTEGER
         )
     """)
+    # para borrar sessions
+    #cursor.execute("DROP TABLE IF EXISTS sesiones")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS sesiones (
             token TEXT PRIMARY KEY,
