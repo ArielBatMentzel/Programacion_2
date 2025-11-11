@@ -18,6 +18,8 @@ with sqlite3.connect(RUTA_DB) as conn:
             telefono INTEGER
         )
     """)
+    # para borrar sessions
+    #cursor.execute("DROP TABLE IF EXISTS sesiones")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS sesiones (
             token TEXT PRIMARY KEY,
