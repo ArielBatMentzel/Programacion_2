@@ -173,3 +173,7 @@ docker stop id_docker o nombre_docker
 detener todos los docker:
 docker stop $(docker ps -q)
 
+
+
+render command to start the app with each deploy:
+uvicorn main:cotizar --host 0.0.0.0 --port $PORT
