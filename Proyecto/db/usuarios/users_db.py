@@ -128,15 +128,14 @@ class DataBaseUsuario(AbstractDatabase):
             except sqlite3.IntegrityError:
                 return False
 
-    def eliminar(self, id: str) -> bool:
+    def eliminar(self, id: int) -> bool:
         """Elimina un usuario y sus sesiones."""
-        
         with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM sesiones WHERE usuario_id = ?", (id,))
             cursor.execute("DELETE FROM usuarios WHERE id = ?", (id,))
             conn.commit()
-            return cursor.rowcount > 0
+        return True
 
     
     def consultar(self, campo: Optional[str] = None, valor: Optional[str] = None) -> List[User]:
