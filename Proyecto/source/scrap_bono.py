@@ -7,6 +7,7 @@ import os
 import sqlite3
 import pandas as pd
 
+
 def _to_float(val):
     if val is None or (isinstance(val, float) and pd.isna(val)):
         return None
@@ -15,6 +16,7 @@ def _to_float(val):
         return float(s)
     except Exception:
         return None
+
 
 def _crear_tabla_fresca(conn, tabla: str):
     # si existe con otro esquema, la volamos y la recreamos con el correcto
@@ -27,23 +29,30 @@ def _crear_tabla_fresca(conn, tabla: str):
             dia_pct  REAL,
             mes_pct  REAL,
             anio_pct REAL,
+            fecha_vencimiento TEXT,
             PRIMARY KEY (nombre, moneda)
         )
     """)
+
 
 def reemplazar_tabla_con_csv(csv_path: str, db_path: str, tabla: str = "bonos") -> dict:
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"No se encontró el CSV: {csv_path}")
 
     df = pd.read_csv(csv_path, dtype=str)
-    esperadas = ["nombre", "moneda", "ultimo", "dia_pct", "mes_pct", "anio_pct"]
+    esperadas = ["nombre", "moneda", "ultimo",
+                 "dia_pct", "mes_pct", "anio_pct", "fecha_vencimiento"]
     faltantes = [c for c in esperadas if c not in df.columns]
     if faltantes:
-        raise ValueError(f"El CSV debe incluir columnas {esperadas}. Faltan: {faltantes}")
+        raise ValueError(
+            f"El CSV debe incluir columnas {esperadas}. Faltan: {faltantes}")
 
     df["ultimo"] = df["ultimo"].map(_to_float)
     for c in ["dia_pct", "mes_pct", "anio_pct"]:
         df[c] = df[c].map(_to_float)
+
+    df["fecha_vencimiento"] = pd.to_datetime(
+        df["fecha_vencimiento"], errors="coerce").dt.strftime("%Y-%m-%d")
 
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
     conn = sqlite3.connect(db_path)
@@ -52,11 +61,12 @@ def reemplazar_tabla_con_csv(csv_path: str, db_path: str, tabla: str = "bonos") 
         conn.execute("PRAGMA synchronous=NORMAL;")
 
         with conn:  # transacción atómica
-            _crear_tabla_fresca(conn, tabla)  # <- SIEMPRE recrea la tabla con el esquema correcto
+            # <- SIEMPRE recrea la tabla con el esquema correcto
+            _crear_tabla_fresca(conn, tabla)
             conn.executemany(
                 f"""INSERT INTO {tabla}
-                    (nombre, moneda, ultimo, dia_pct, mes_pct, anio_pct)
-                    VALUES (?, ?, ?, ?, ?, ?)""",
+                    (nombre, moneda, ultimo, dia_pct, mes_pct, anio_pct, fecha_vencimiento)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 df[esperadas].itertuples(index=False, name=None)
             )
 
@@ -67,17 +77,10 @@ def reemplazar_tabla_con_csv(csv_path: str, db_path: str, tabla: str = "bonos") 
 
 # --- Ejecutar directo ---
 if __name__ == "__main__":
-    CSV = r"C:\tp_final\Programacion_2\Proyecto\bonos_argentinos.csv"
-    DB  = r"C:\tp_final\Programacion_2\Proyecto\db\datos_financieros\datos_financieros.db"
+    CSV = r"D:\progra2\tp_final\Programacion_2\Proyecto\bonos_argentinos_vencimiento.csv"
+    DB = r"C:\tp_final\Programacion_2\Proyecto\db\datos_financieros\datos_financieros.db"
     info = reemplazar_tabla_con_csv(CSV, DB, tabla="bonos")
     print("✅ OK:", info)
-
-
-
-
-
-
-
 
 
 """

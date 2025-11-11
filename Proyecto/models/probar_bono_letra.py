@@ -52,7 +52,7 @@ def _print_dict(titulo: str, data: dict):
         print(f"  {k}: {v}")
 
 
-def probar_bonos(nombres: list, monto_inicial: float, mes_banda: str):
+def probar_bonos(nombres: list, monto_inicial: float, mes_banda: str, dias_bono: int):
     if not nombres:
         return
     dolar = obtener_dolar_oficial()
@@ -76,8 +76,14 @@ def probar_bonos(nombres: list, monto_inicial: float, mes_banda: str):
         rend = bono.calcular_rendimiento(
             monto_inicial, tipo_cambio_actual=dolar)
         _print_dict("Rendimiento", rend)
-        rb = bono.rendimiento_vs_banda(monto_inicial, mes=mes_banda)
-        _print_dict(f"Vs banda {mes_banda}", rb)
+
+        # ✅ usar los parámetros de la función (NO 'args')
+        rb = bono.rendimiento_vs_banda(
+            monto_inicial=monto_inicial,
+            mes=mes_banda,          # mes de arranque (YYYY-MM)
+            dias=dias_bono          # días que ingresó la persona
+        )
+        _print_dict(f"Vs banda {rb['mes_banda_usado']}", rb)
 
 
 def probar_letras(nombres: list, monto_inicial: float, mes_banda: str, dias_default: int, valor_nominal: float):
@@ -129,6 +135,9 @@ def main():
                         help="Días al vencimiento para letras si aplica")
     parser.add_argument("--vn_letra", type=float, default=100,
                         help="Valor nominal supuesto para letras")
+    parser.add_argument("--dias_bono", type=int, default=30,
+                        help="Días a mantener los bonos (p.ej. 90, 120, 130)")
+
     args = parser.parse_args()
 
     mes_banda = validar_mes(args.mes)
@@ -142,7 +151,7 @@ def main():
         print("Indicar --bonos y/o --letras.")
         return
 
-    probar_bonos(bonos, args.monto, mes_banda)
+    probar_bonos(bonos, args.monto, mes_banda, args.dias_bono)
     probar_letras(letras, args.monto, mes_banda,
                   args.dias_letra, args.vn_letra)
 

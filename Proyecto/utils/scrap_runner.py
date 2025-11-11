@@ -19,6 +19,7 @@ SCRAPERS_MAP = {
 
 MAX_CONCURRENCY = 3
 
+
 async def run_scraper(nombre: str):
     archivo = SCRAPERS_MAP.get(nombre)
     if not archivo:
@@ -32,20 +33,20 @@ async def run_scraper(nombre: str):
 
     print(f"▶ Ejecutando {archivo} ...")
     start = time.time()
-    
+
     proc = await asyncio.create_subprocess_exec(
         "python", path,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )
-    
+
     stdout, stderr = await proc.communicate()
-    
+
     if stdout:
         print(stdout.decode().strip())
     if stderr:
         print(stderr.decode().strip())
-    
+
     elapsed = time.time() - start
     if proc.returncode == 0:
         print(f"✅ {archivo} finalizó correctamente en {elapsed:.2f} s.")
@@ -59,14 +60,10 @@ async def _scrap_limited(names: List[str]):
     async def sem_task(name):
         async with semaphore:
             await run_scraper(name)
-    
+
     await asyncio.gather(*(sem_task(name) for name in names))
 
 
 def scrap(nombres: List[str]):
     """Ejemplo: scrap(["bono","plazo_fijo"])"""
-<<<<<<< HEAD
     asyncio.run(_scrap_limited(nombres))
-=======
-    asyncio.run(_scrap_limited(nombres))
->>>>>>> 2a2b0ebf9e48c8f81308d0b75bf2239c126b802f

@@ -5,6 +5,18 @@ import sqlite3
 import os
 from utils.obtener_banda_cambiaria import obtener_banda_cambiaria
 from utils.obtener_ultimo_valor_dolar import obtener_dolar_oficial
+from datetime import date, timedelta
+
+
+def _mes_banda_de_salida(mes_inicio: str | None, fecha_inicio: date | None, dias: int) -> str:
+    """Devuelve 'YYYY-MM' del mes final (inicio + dias)."""
+    if mes_inicio:
+        y, m = mes_inicio.split("-")
+        start = date(int(y), int(m), 1)
+    else:
+        start = fecha_inicio or date.today()
+    fin = start + timedelta(days=int(dias))
+    return f"{fin.year:04d}-{fin.month:02d}"
 
 
 # -------------------- Clase base --------------------
@@ -123,51 +135,59 @@ class Bono(FixedIncomeInstrument):
         monto_inicial_ars = monto_inicial
         if self.moneda == "USD":
             if tipo_cambio_actual is None:
-                tipo_cambio_actual = self.valor_dolar  # 🔥 Intenta caché primero
-                if tipo_cambio_actual is None:
-                    tipo_cambio_actual = obtener_dolar_oficial()
-                    self.valor_dolar = tipo_cambio_actual  # 🔥 Guarda en caché
+                # 🔥 Intenta caché primero
+                tipo_cambio_actual = self.valor_dolar or obtener_dolar_oficial()
+
+                self.valor_dolar = tipo_cambio_actual  # 🔥 Guarda en caché
             if tipo_cambio_actual:
                 monto_inicial_ars = monto_inicial * tipo_cambio_actual
 
         r_anual = self._estimacion_rend_anual()
-        r_periodo = (1 + r_anual) ** (30 / 365) - 1
+        dias = int(dias) if dias and dias > 0 else 30
+        r_periodo = (1 + r_anual) ** (dias / 365) - 1
         monto_final = monto_inicial_ars * (1 + r_periodo)
-        ganancia_pesos = monto_final - monto_inicial_ars
-        ganancia_usd = ganancia_pesos / tipo_cambio_actual if tipo_cambio_actual else None
         return {
             "r_anual_pct": round(r_anual * 100, 2),
             "r_mensual_pct": round(r_periodo * 100, 2),
             "monto_final_pesos": round(monto_final, 2),
-            "ganancia_pesos": round(ganancia_pesos, 2)
+            "ganancia_pesos": round(monto_final - monto_inicial_ars, 2),
+            "dias_considerados": dias,
         }
 
     def actualizar(self, valor_dolar: float):
         self.valor_dolar = valor_dolar
 
-    def rendimiento_vs_banda(self, monto_inicial: float, mes: str = None):
-        piso, techo = obtener_banda_cambiaria(mes)
-        if not techo or techo <= 0:
-            return None
+    def rendimiento_vs_banda(self, monto_inicial: float, mes: str | None = None, dias: int = 30, fecha_inicio: date | None = None,):
+        dias = int(dias) if dias and dias > 0 else 30
 
+    # 1) rendimiento por N días
         dolar_oficial = self.valor_dolar or obtener_dolar_oficial()
-    # 1) calculo con monto ORIGINAL + TC oficial (la función convierte una sola vez)
         rend = self.calcular_rendimiento(
-            monto_inicial, tipo_cambio_actual=dolar_oficial)
+            monto_inicial, tipo_cambio_actual=dolar_oficial, dias=dias)
         monto_final_pesos = rend["monto_final_pesos"]
 
-    # 2) factor en ARS (mismo TC en numerador y denominador)
+    # 2) factor ARS
         monto_inicial_ars = monto_inicial * \
             (dolar_oficial if self.moneda == "USD" and dolar_oficial else 1.0)
         factor_ars = monto_final_pesos / monto_inicial_ars
 
-    # 3) banda SOLO para el break-even en USD
-        dolar_break_even = factor_ars * techo
-        monto_final_usd_techo = monto_final_pesos / techo
+    # 3) banda del MES FINAL (inicio + dias)
+        mes_salida = _mes_banda_de_salida(
+            mes_inicio=mes, fecha_inicio=fecha_inicio, dias=dias)
+        piso, techo = obtener_banda_cambiaria(mes_salida)
+        if not techo or techo <= 0:
+            piso, techo = obtener_banda_cambiaria(None)
+            if not techo or techo <= 0:
+                return None
 
+    # 4) métricas vs banda
         return {
-            "monto_final_usd_techo": round(monto_final_usd_techo, 2),
-            "dolar_equilibrio": round(dolar_break_even, 2)
+            "monto_final_pesos": round(monto_final_pesos, 2),
+            "factor_ars": round(factor_ars, 6),
+            "monto_final_usd_techo": round(monto_final_pesos / techo, 2),
+            "dolar_equilibrio": round(factor_ars * techo, 2),
+            "dias_considerados": dias,
+            "mes_banda_usado": mes_salida,
         }
 
 # -------------------- Letra --------------------
