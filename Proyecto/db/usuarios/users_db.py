@@ -50,6 +50,7 @@ class DataBaseUsuario(AbstractDatabase):
 
 
 
+
     # ========================================================
     # FUNCIONES DE ALTO NIVEL PARA AUTH_SERVICE Y AUTH_API
     # ========================================================
@@ -258,5 +259,16 @@ class DataBaseUsuario(AbstractDatabase):
         with sqlite3.connect(self.conexion) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM sesiones WHERE token = ?", (token,))
+            conn.commit()
+            return cursor.rowcount > 0
+        
+    def eliminar_sesion_por_usuario(self, nombre_usuario: str) -> bool:
+        """Elimina la sesión activa de un usuario dado su nombre de usuario."""
+        usuario_id = self.obtener_id_usuario(nombre_usuario)
+        if not usuario_id:
+            return False
+        with sqlite3.connect(self.conexion) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM sesiones WHERE usuario_id = ?", (usuario_id,))
             conn.commit()
             return cursor.rowcount > 0

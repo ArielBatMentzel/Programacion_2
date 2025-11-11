@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 
 
 # ================================================================
@@ -57,11 +57,14 @@ class Session:
 # Entonces validará los datos que lleguen y estandarizará lo que devuelve la API. 
 
 class UsuarioCrear(BaseModel):
-    """ Modelo para registrar un nuevo usuario. """
+    """Modelo para registrar un nuevo usuario."""
     
     nombre_usuario: str = Field(..., min_length=3, max_length=20)
     contraseña: str = Field(..., min_length=6)
     nombre_completo: Optional[str] = None
+    tipo: Optional[str] = Field(default="normal")
+    email: Optional[EmailStr] = None
+    telefono: Optional[int] = None
 
 
 class UsuarioPublico(BaseModel):
@@ -69,6 +72,7 @@ class UsuarioPublico(BaseModel):
     
     nombre_usuario: str
     nombre_completo: Optional[str] = None
+    tipo: str   # <- nuevo
 
 
 class Token(BaseModel):
