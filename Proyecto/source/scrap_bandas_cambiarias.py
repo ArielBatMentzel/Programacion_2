@@ -13,12 +13,9 @@ from dotenv import load_dotenv
 # Solo carga el .env si existe (útil localmente, el Render lo ignora)
 # Porque setea sus propias variables de entorno (setea el mismo el DB_URL)
 load_dotenv()
-
 DB_URL = os.getenv("DB_URL")
-
 if not DB_URL:
     raise ValueError("⚠️ No se encontró la variable DB_URL en el entorno.")
-
 engine = create_engine(DB_URL)
 
 
@@ -53,7 +50,6 @@ def reemplazar_tabla_bandas_con_csv(
     fecha,banda_inferior,banda_superior,ancho
 
     :param csv_path: ruta del CSV
-    :param db_path: ruta de la base de datos SQLite
     :param tabla: ruta de la tabla en el Supabase a reemplazar
     :return: dict con información de la operación
     """
@@ -81,25 +77,48 @@ def reemplazar_tabla_bandas_con_csv(
     
     # Conectar a Supabase y reemplazar tabla
     with engine.begin() as conn:
-        conn.execute(text(f"DELETE FROM {tabla};")) # Limpiamos la tabla
-        conn.execute(
-            text(f"ALTER SEQUENCE {esquema_db}.{tabla_db}_id_seq RESTART WITH 1;")
-        )
+        # Verificar si existe la tabla
+        tabla_existe = conn.execute(text(f"""
+            SELECT EXISTS (
+                SELECT 1 
+                FROM information_schema.tables 
+                WHERE table_schema = '{esquema_db}' 
+                AND table_name = '{tabla_db}'
+            )
+        """)).scalar()
+
+        filas_borradas = 0
+        if tabla_existe:
+            # Borrar filas y obtener cantidad borrada
+            filas_borradas = conn.execute(
+                text(f"DELETE FROM {esquema_db}.{tabla_db}")
+            ).rowcount
+
+            # Reiniciar secuencia solo si hubo filas borradas
+            if filas_borradas > 0:
+                conn.execute(
+                    text(f"ALTER SEQUENCE {esquema_db}.{tabla_db}_id_seq RESTART WITH 1")
+                )
+        else:
+            # agregar columna id incremental
+            df.insert(0, "id", range(1, len(df) + 1))
+
+        # Insertar datos del CSV (crea tabla si no existía)
         df.to_sql(
-            tabla_db, # Tabla del Supabase
-            conn, 
-            schema=esquema_db, # Esquema del Supabase
-            if_exists="append", 
+            tabla_db,
+            conn,
+            schema=esquema_db,
+            if_exists="append",
             index=False
         )
-    
+
+
     return {
         "tabla": tabla,
         "filas_insertadas": len(df),
         "csv": os.path.abspath(csv_path)
     }
     
-
 
 # --- Ejecutar directo ---
 if __name__ == "__main__":

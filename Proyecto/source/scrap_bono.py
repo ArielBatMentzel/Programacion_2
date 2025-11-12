@@ -1,13 +1,19 @@
 """
-Función para reemplazar los datos de bonos
-en la base de datos 'datos_financieros.db'
-a partir de un CSV local. Siempre elimina los datos previos
-y crea la tabla con el esquema correcto.
+Carga los datos de bonos desde CSV a la 
+base de datos de Supabase.
+Elimina las filas existentes y carga las nuevas.
 """
 
 import os
-import sqlite3
 import pandas as pd
+from sqlalchemy import create_engine, text
+from dotenv import load_dotenv
+
+load_dotenv()
+DB_URL = os.getenv("DB_URL")
+if not DB_URL:
+    raise ValueError("⚠️ No se encontró la variable DB_URL en el entorno.")
+engine = create_engine(DB_URL)
 
 
 def _to_float(val):
@@ -29,48 +35,33 @@ def _to_float(val):
         return None
 
 
-def _crear_tabla_fresca(conn, tabla: str):
+def reemplazar_tabla_bonos_con_csv(
+    csv_path: str,
+    tabla: str = "datos_financieros.bonos"
+) -> dict:
     """
-    Elimina y recrea la tabla con el esquema correcto para los bonos.
-    
-    Args:
-        conn: sqlite3.Connection
-        tabla: nombre de la tabla a crear
-    """
-    conn.execute(f"DROP TABLE IF EXISTS {tabla};")
-    conn.execute(f"""
-        CREATE TABLE {tabla} (
-            nombre   TEXT NOT NULL,
-            moneda   TEXT NOT NULL,
-            ultimo   REAL,
-            dia_pct  REAL,
-            mes_pct  REAL,
-            anio_pct REAL,
-            fecha_vencimiento TEXT,
-            PRIMARY KEY (nombre, moneda)
-        )
-    """)
+    Reemplaza la tabla de bandas cambiarias en Supabase 
+    con los datos del CSV.
+    - Elimina todas las filas existentes
+    - Inserta los datos del CSV
 
+    CSV esperado:
+    fecha,banda_inferior,banda_superior,ancho
 
-def reemplazar_tabla_con_csv(
-        csv_path: str, db_path: str, tabla: str = "bonos"
-        ) -> dict:
+    :param csv_path: ruta del CSV
+    :param tabla: ruta de la tabla en el Supabase a reemplazar
+    :return: dict con información de la operación
     """
-    Reemplaza toda la tabla de bonos con los datos de un CSV.
+    esquema_db = tabla.split(".")[0]
+    tabla_db = tabla.split(".")[-1]
     
-    Args:
-        csv_path: ruta al archivo CSV
-        db_path: ruta a la base de datos SQLite
-        tabla: nombre de la tabla en la base de datos
-    
-    Returns:
-        dict con info: db, tabla, filas_insertadas, csv
-    """
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"No se encontró el CSV: {csv_path}")
 
-    # Leer CSV y verificar columnas
+    # Leer CSV
     df = pd.read_csv(csv_path, dtype=str)
+
+    # Columnas esperadas
     esperadas = [
         "nombre", "moneda", "ultimo",
         "dia_pct", "mes_pct", "anio_pct", "fecha_vencimiento"
@@ -88,158 +79,58 @@ def reemplazar_tabla_con_csv(
 
     # Formatear fecha
     df["fecha_vencimiento"] = pd.to_datetime(
-        df["fecha_vencimiento"], errors="coerce").dt.strftime("%Y-%m-%d"
-                                                              )
-
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    conn = sqlite3.connect(db_path)
-    try:
-        conn.execute("PRAGMA journal_mode=WAL;")
-        conn.execute("PRAGMA synchronous=NORMAL;")
-
-        with conn:  # transacción atómica
-            _crear_tabla_fresca(conn, tabla)
-            conn.executemany(
-                f"""INSERT INTO {tabla} (
-                    nombre,
-                    moneda,
-                    ultimo,
-                    dia_pct,
-                    mes_pct,
-                    anio_pct,
-                    fecha_vencimiento
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                df[esperadas].itertuples(index=False, name=None)
-            )
-
-        return {
-            "db": os.path.abspath(db_path),
-            "tabla": tabla,
-            "filas_insertadas": len(df),
-            "csv": os.path.abspath(csv_path)
-        }
-    finally:
-        conn.close()
+        df["fecha_vencimiento"], errors="coerce").dt.strftime("%Y-%m-%d")
+    
+    # Conectar a Supabase y reemplazar tabla
+    with engine.begin() as conn:
+        conn.execute(text(f"""
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT FROM information_schema.tables 
+                    WHERE table_schema = '{esquema_db}'
+                    AND table_name = '{tabla_db}'
+                ) THEN
+                    EXECUTE 'DELETE FROM {esquema_db}.{tabla_db}';
+                END IF;
+            END
+            $$;
+        """))
+        df.to_sql(
+            tabla_db, # Tabla del Supabase
+            conn, 
+            schema=esquema_db, # Esquema del Supabase
+            if_exists="append", 
+            index=False
+        )
+    
+    return {
+        "tabla": tabla,
+        "filas_insertadas": len(df),
+        "csv": os.path.abspath(csv_path)
+    }
+    
 
 
 # --- Ejecutar directo ---
 if __name__ == "__main__":
     """
-    Ejecuta la función usando un CSV específico y muestra info del reemplazo.
+    Script ejecutable que reemplaza la tabla 'bandas_cambiarias'
+      en la base de datos usando un CSV local. 
+    Muestra información del resultado en consola.
     """
+    # Directorio del script actual y la ruta del CSV
     carpeta_script = os.path.dirname(os.path.abspath(__file__))
-    DB = os.path.join(
-        carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db"
-        )
     CSV = os.path.join(
         carpeta_script, "..", "datasets", "bonos_argentinos_vencimiento.csv"
         )
 
-    info = reemplazar_tabla_con_csv(CSV, DB, tabla="bonos")
-    print("✅ OK:", info)
-
-
-"""
-A partir de acá, no se usan las siguientes
- funciones porque los datos que scrappeamos
-requieren de conocimiento financiero muy avanzado
- para poder realizar los distintos 
-calculos de las fórmulas para computar el rendimiento.
-"""
-
-# from selenium import webdriver
-# from selenium.webdriver.common.by import By
-# from selenium.webdriver.chrome.service import Service
-# from selenium.webdriver.chrome.options import Options
-# from webdriver_manager.chrome import ChromeDriverManager
-# import sqlite3
-# import os
-# import time
-
-# print("Inicio del scraping de bonos...")
-
-# # Configurar Chrome en modo headless
-# options = Options()
-# options.add_argument("--headless=new")
-# options.add_argument("--no-sandbox")
-# options.add_argument("--disable-dev-shm-usage")
-# options.add_argument("--disable-gpu")
-
-# # Carpeta del proyecto y base de datos
-# carpeta_proyecto = os.path.abspath
-# (os.path.join(os.path.dirname(__file__), ".."))
-# db_path = os.path.join(carpeta_proyecto,
-# "db","datos_financieros", "datos_financieros.db")
-# os.makedirs(os.path.dirname(db_path),
-# exist_ok=True)  # Crear carpeta si no existe
-
-# # Iniciar navegador
-# driver = webdriver.Chrome(service=Service(ChromeDriverManager()
-# .install()), options=options)
-# driver.get("https://www.rava.com/cotizaciones/bonos")
-# time.sleep(5)  # Esperar a que cargue la tabla
-
-# # Localizar la tabla
-# tabla = driver.find_element(By.XPATH, "//table")
-# filas = tabla.find_elements(By.TAG_NAME, "tr")
-
-# datos = []
-# for fila in filas:
-#     celdas = fila.find_elements(By.TAG_NAME, "td")
-#     if celdas:
-#         fila_datos = []
-#         for i, c in enumerate(celdas):
-#             valor = c.get_attribute("textContent").strip()
-#             # Convertir a float los valores numéricos,
-#  excepto la primera columna y "-" vacío
-#             if i != 0 and valor not in ["-", ""]:
-#                 valor = valor.replace(".", "").replace(",", ".")
-#                 try:
-#                     valor = float(valor)
-#                 except ValueError:
-#                     pass
-#             fila_datos.append(valor)
-#         datos.append(fila_datos)
-
-# driver.quit()
-# print("✅ Datos extraídos de Rava.")
-
-# # Guardar en la base de datos
-# conn = sqlite3.connect(db_path)
-# cursor = conn.cursor()
-
-# # Crear tabla si no existe
-# cursor.execute("""
-# CREATE TABLE IF NOT EXISTS bonos (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     especie TEXT,
-#     ultimo REAL,
-#     'Dia_pct' REAL,
-#     'Mes_pct' REAL,
-#     'Año_pct' REAL,
-#     anterior REAL,
-#     apertura REAL,
-#     minimo REAL,
-#     maximo REAL,
-#     hora TEXT,
-#     vol_nominal REAL,
-#     vol_efectivo REAL
-# )
-# """)
-
-# for fila in datos:
-#     # Completar la fila con None si faltan columnas
-#     while len(fila) < 12:
-#         fila.append(None)
-#     cursor.execute("""
-#     INSERT INTO bonos (
-#         especie, ultimo, 'Dia_pct', 'Mes_pct', 'Año_pct',
-#         anterior, apertura, minimo, maximo,
-#         hora, vol_nominal, vol_efectivo
-#     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-#     """, fila)
-
-# conn.commit()
-# conn.close()
-# print(f"✅ Datos guardados en la base: {db_path}")
-# print("Fin del scraping de bonos.")
+    try:
+        info = reemplazar_tabla_bonos_con_csv(CSV)
+        print("✅ Tabla 'bonos' reemplazada correctamente en Supabase:")
+        for k, v in info.items():
+            print(f"  {k}: {v}")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        import traceback
+        traceback.print_exc()

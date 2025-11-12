@@ -6,22 +6,19 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import WebDriverException
-from sqlalchemy import create_engine, text
+import sqlite3
 import os
 import re
 import shutil
-from dotenv import load_dotenv
 
 print("Iniciando scraping de dólar...")
 
-# CONFIG DB (Supabase via SQLAlchemy)
-load_dotenv()
-DB_URL = os.getenv("DB_URL")
-if not DB_URL:
-    raise ValueError("⚠️ No se encontró la variable DB_URL en el entorno.")
-engine = create_engine(DB_URL)
+# Rutas
+carpeta_script = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(carpeta_script, "..", "db",
+                       "datos_financieros", "datos_financieros.db")
 
-# CONFIGURAR SELENIUM 
+# Configurar Selenium headless
 options = Options()
 options.add_argument("--headless=new")
 options.add_argument("--disable-gpu")
@@ -39,7 +36,7 @@ except WebDriverException as e:
     driver = webdriver.Chrome(
         service=Service(ChromeDriverManager().install()), options=options
     )
-    
+
 # Abrir página
 driver.get("https://dolarhoy.com/")
 wait = WebDriverWait(driver, 10)
@@ -50,6 +47,8 @@ bloques = wait.until(
         (By.CSS_SELECTOR, "div.tile.is-child, div.tile.is-child.only-mobile")
     )
 )
+data = []
+
 
 def limpiar_numero(valor):
     """
@@ -63,44 +62,53 @@ def limpiar_numero(valor):
     except Exception:
         return None
 
-data = []
+
 for b in bloques:
     try:
         tipo = b.find_element(
             By.CSS_SELECTOR, ".titleText"
             ).text.strip().upper()
-        compra = b.find_element(
-            By.CSS_SELECTOR, ".compra .val"
-            ).text.strip()
-        venta = b.find_element(
-            By.CSS_SELECTOR, ".venta .val"
-            ).text.strip()
+        compra = b.find_element(By.CSS_SELECTOR, ".compra .val").text.strip()
+        venta = b.find_element(By.CSS_SELECTOR, ".venta .val").text.strip()
         variacion = b.find_element(
             By.CSS_SELECTOR, ".var-porcentaje div"
             ).text.strip()
 
-        data.append((tipo, limpiar_numero(compra), limpiar_numero(venta), limpiar_numero(variacion)))
+        data.append([tipo, limpiar_numero(compra), limpiar_numero(venta),
+                     limpiar_numero(variacion)])
     except Exception:
         continue
 
 driver.quit()
 print("Datos extraídos de la web.")
 
-# Guardamos en Supabase
-with engine.begin() as conn:
-    conn.execute(text("DROP TABLE IF EXISTS datos_financieros.dolar"))
-    conn.execute(text("""
-        CREATE TABLE datos_financieros.dolar (
-            id SERIAL PRIMARY KEY,
-            tipo TEXT,
-            compra DOUBLE PRECISION,
-            venta DOUBLE PRECISION,
-            variacion DOUBLE PRECISION
-        )
-    """))
-    conn.execute(
-        text("INSERT INTO datos_financieros.dolar (tipo, compra, venta, variacion) VALUES (:tipo, :compra, :venta, :variacion)"),
-        [{"tipo": t, "compra": c, "venta": v, "variacion": var} for (t, c, v, var) in data]
-    )
+# Guardar en la base existente
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
 
-print("✅ Tabla 'dolar' reemplazada y datos guardados en Supabase.")
+# Eliminamos la tabla anterior si existe 
+cursor.execute("DROP TABLE IF EXISTS dolar")
+# Creamos la tabla desde cero 
+cursor.execute(
+    """
+CREATE TABLE dolar (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tipo TEXT,
+    compra REAL,
+    venta REAL,
+    variacion REAL
+)
+"""
+)
+# Insertamos todos los registros de una vez con executemany()
+cursor.executemany(
+    """INSERT INTO dolar (tipo, compra, venta, variacion)
+       VALUES (?, ?, ?, ?)""",
+    data
+)
+
+conn.commit()
+conn.close()
+
+print(f"✅ Tabla reemplazada y datos guardados en: {db_path}")
+print("Fin del scraping de dólar.")
