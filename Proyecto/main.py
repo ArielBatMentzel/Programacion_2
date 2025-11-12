@@ -1,10 +1,8 @@
 # main.py
 from fastapi import FastAPI
-from pydantic import BaseModel
 import os
 from auth.auth_api import router as auth_router
 from utils.obtener_ultimo_valor_dolar import obtener_ultimo_valor_dolar
-from pathlib import Path
 import sqlite3
 import pandas as pd
 from fastapi.responses import StreamingResponse
@@ -12,48 +10,59 @@ from io import StringIO
 import asyncio
 
 """
-NOTA: Para iniciar el servidor se usa: `uvicorn main:cotizar --reload` 
-y se cierra con `Control + C`.
-Asegurarse de haber iniciado el entorno y haber hecho: cd Proyecto
+API CotizAR
 
+Proporciona endpoints para cotizaciones financieras y exportación a CSV.
 
-Endpoints principales:
+Instrucciones:
+1. Iniciar servidor: `uvicorn main:cotizar --reload`
+2. Cerrar con Ctrl+C
+3. Ejecutar desde carpeta Proyecto y entorno activo.
 
-USAR ESTE
-http://127.0.0.1:8000/docs → documentación interactiva
-
-
-
-http://127.0.0.1:8000/ → mensaje de inicio
-http://127.0.0.1:8000/dolar → dólar
-http://127.0.0.1:8000/cotizaciones → tabla de base de datos
-http://127.0.0.1:8000/exportar → descarga CSV
+Endpoints:
+- / → mensaje de inicio
+- /dolar → valor actual del dólar
+- /cotizaciones → cotizaciones en JSON
+- /exportar_dolar → descarga CSV
+- /docs → documentación interactiva
 """
 
-# 🔹 Creamos una sola instancia de FastAPI
 cotizar = FastAPI(title="CotizAR API")
-
-# 🔹 Registrar router de autenticación
 cotizar.include_router(auth_router)
 
-# 🔹 Ruta al archivo de base de datos
-DB_PATH = os.path.join(os.path.dirname(__file__), "db", "datos_financieros", "datos_financieros.db")
-#######################################################################################################################################
-# 🔹 Endpoint principal
+DB_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "db",
+    "datos_financieros",
+    "datos_financieros.db"
+)
+
+
+#######################################################################
 @cotizar.get(
-    "/", 
-    summary="Inicio de la API", 
-    description="Mensaje de bienvenida para verificar que la API está funcionando correctamente."
+    "/",
+    summary="Inicio de la API",
+    description="Verifica que la API esté funcionando correctamente."
 )
 async def inicio():
+    """Retorna un mensaje indicando que la API está operativa."""
     return {"mensaje": "API CotizAR funcionando correctamente"}
 
-#######################################################################################################################################
+
+#######################################################################
 @cotizar.get("/dolar")
 async def mostrar_dolar_hoy():
+    """
+    Obtiene el último valor del dólar 'DÓLAR BLUE'.
+
+    Returns:
+        dict: {"Dólar hoy": valor} o {"error": mensaje}.
+    """
     loop = asyncio.get_running_loop()
     try:
-        valor = await loop.run_in_executor(None, obtener_ultimo_valor_dolar)
+        valor = await loop.run_in_executor(
+            None, obtener_ultimo_valor_dolar
+        )
         return {"Dólar hoy": valor}
     except Exception as e:
         import traceback
@@ -61,24 +70,31 @@ async def mostrar_dolar_hoy():
         return {"error": str(e)}
 
 
-#######################################################################################################################################
-# 🔹 Función para obtener los datos de la base de datos
+#######################################################################
 def obtener_datos():
+    """
+    Recupera todos los registros de la tabla 'dolar' como diccionarios.
+
+    Returns:
+        List[dict]: Lista de filas de la tabla.
+    """
     conexion = sqlite3.connect(DB_PATH)
-    conexion.row_factory = sqlite3.Row  # Permite devolver resultados como diccionarios
+    conexion.row_factory = sqlite3.Row
     cursor = conexion.cursor()
-    cursor.execute("SELECT * FROM dolar")  # Cambiar por el nombre de tu tabla
+    cursor.execute("SELECT * FROM dolar")
     datos = cursor.fetchall()
     conexion.close()
     return [dict(fila) for fila in datos]
 
-# 🔹 Endpoint para mostrar los datos de la base
+
+#######################################################################
 @cotizar.get(
     "/cotizaciones",
     summary="Mostrar cotizaciones",
-    description="Devuelve todas las cotizaciones de la tabla 'dolar' de la base de datos en formato JSON."
+    description="Devuelve todas las cotizaciones de la tabla 'dolar' en JSON."
 )
 async def mostrar_cotizaciones():
+    """Retorna todas las cotizaciones en formato JSON."""
     loop = asyncio.get_running_loop()
     try:
         data = await loop.run_in_executor(None, obtener_datos)
@@ -86,17 +102,24 @@ async def mostrar_cotizaciones():
     except Exception as e:
         return {"error": str(e)}
 
-#######################################################################################################################################
-# 🔹 Endpoint para exportar la tabla como CSV
+
+#######################################################################
 @cotizar.get(
     "/exportar_dolar",
-    summary="Exportar cotizaciones de dolar a CSV",
-    description="Exporta todas las cotizaciones de la base de datos en un archivo CSV descargable."
+    summary="Exportar cotizaciones a CSV",
+    description="Exporta cotizaciones a un archivo CSV descargable."
 )
 async def exportar_csv():
+    """
+    Consulta la tabla 'dolar' y devuelve un CSV en StreamingResponse.
+
+    Returns:
+        StreamingResponse: CSV con todas las cotizaciones.
+    """
     loop = asyncio.get_running_loop()
 
     def exportar():
+        """Genera el CSV en memoria desde la DB."""
         conn = sqlite3.connect(DB_PATH)
         df = pd.read_sql_query("SELECT * FROM dolar", conn)
         conn.close()
@@ -109,5 +132,8 @@ async def exportar_csv():
     return StreamingResponse(
         stream,
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=cotizaciones.csv"}
+        headers={
+            "Content-Disposition":
+            "attachment; filename=cotizaciones.csv"
+        }
     )

@@ -1,9 +1,16 @@
+# ==========================================================
 # archivo: factory/fixed_income_factory.py
+# ==========================================================
 
 from abc import ABC, abstractmethod
-from models.instruments import FixedIncomeInstrument, Bono, Letra, PlazoFijo
-#Pase
 from typing import Optional
+from models.instruments import (
+    FixedIncomeInstrument,
+    Bono,
+    Letra,
+    PlazoFijo,
+)
+
 
 class FinancialInstrumentFactory(ABC):
     """
@@ -12,33 +19,62 @@ class FinancialInstrumentFactory(ABC):
     """
 
     @abstractmethod
-    def crear_instrumento(self, tipo: str, nombre: str, moneda: str, **kwargs) -> Optional[FixedIncomeInstrument]:
+    def crear_instrumento(
+        self,
+        tipo: str,
+        nombre: str,
+        moneda: str,
+        **kwargs,
+    ) -> Optional[FixedIncomeInstrument]:
         """
         Crea un instrumento financiero según el tipo especificado.
-        #:param tipo: tipo de instrumento ("bono", "letra", "plazo_fijo", "pase")
+
+        :param tipo: tipo de instrumento (ej. "bono", "letra",
+                     "plazo_fijo")
         :param nombre: nombre del instrumento
         :param moneda: moneda del instrumento
         :param kwargs: otros parámetros específicos del instrumento
-        :return: instancia de FixedIncomeInstrument o None si el tipo no es válido
+        :return: instancia de FixedIncomeInstrument o None si
+                 el tipo no es válido
         """
         pass
 
+
 class FixedIncomeInstrumentFactory(FinancialInstrumentFactory):
     """
-    Fábrica concreta que implementa la creación de instrumentos de renta fija.
+    Fábrica concreta que implementa la creación de instrumentos de
+    renta fija.
     """
 
-    def crear_instrumento(self, tipo: str, nombre: str, moneda: str, **kwargs) -> Optional[FixedIncomeInstrument]:
+    def crear_instrumento(
+        self,
+        tipo: str,
+        nombre: str,
+        moneda: str,
+        **kwargs,
+    ) -> Optional[FixedIncomeInstrument]:
         """
         Crea un instrumento concreto según el tipo.
         """
         tipo = tipo.lower()
         if tipo == "bono":
-            return Bono(nombre=nombre, moneda=moneda, **kwargs)
+            return Bono(
+                nombre=nombre,
+                moneda=moneda,
+                **kwargs,
+            )
         elif tipo == "letra":
-            return Letra(nombre=nombre, moneda=moneda, **kwargs)
+            return Letra(
+                nombre=nombre,
+                moneda=moneda,
+                **kwargs,
+            )
         elif tipo == "plazo_fijo":
-            return PlazoFijo(nombre=nombre, moneda=moneda, **kwargs)
+            return PlazoFijo(
+                nombre=nombre,
+                moneda=moneda,
+                **kwargs,
+            )
         # elif tipo == "pase":
         #     return Pase(nombre=nombre, moneda=moneda, **kwargs)
         else:

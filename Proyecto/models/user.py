@@ -6,17 +6,17 @@ from pydantic import BaseModel, Field, EmailStr
 
 
 # ================================================================
-# PRIMEROS MODELOS SIMPLES
+# MODELOS SIMPLES (ENTIDADES INTERNAS)
 # ================================================================
 
+
 class User:
-    """
-    Representa un usuario del sistema.
+    """Representa un usuario del sistema.
+
     Atributos:
-        - tipo: 'admin' o 'normal'
-        - email: correo electrónico del usuario
-        - nombre: nombre del usuario
-        - otros atributos opcionales según necesidad.
+        email (str): correo electrónico del usuario.
+        nombre (str): nombre del usuario.
+        tipo (str): 'admin' o 'normal'.
     """
 
     def __init__(self, email: str, nombre: str, tipo: str = "normal"):
@@ -34,31 +34,39 @@ class User:
 
 
 class Session:
-    """
-    Representa una sesión activa de un usuario.
+    """Representa una sesión activa de un usuario.
+
     Atributos:
-        - token: identificador único de la sesión
-        - usuario_id: id del usuario (entero)
-        - fecha_inicio: datetime de inicio de sesión
-        - fecha_expiracion: datetime de expiración de la sesión
+        token (str): identificador único de la sesión.
+        usuario_id (int): id del usuario.
+        fecha_inicio (datetime): inicio de sesión.
+        fecha_expiracion (datetime): expiración de la sesión.
     """
 
-    def __init__(self, token: str, usuario_id: int, fecha_inicio: datetime, fecha_expiracion: datetime):
+    def __init__(
+        self,
+        token: str,
+        usuario_id: int,
+        fecha_inicio: datetime,
+        fecha_expiracion: datetime,
+    ):
         self.token = token
         self.usuario_id = usuario_id
         self.fecha_inicio = fecha_inicio
         self.fecha_expiracion = fecha_expiracion
 
+
 # ================================================================
-# MODELOS Pydantic (USADOS EN LA API / VALIDACIÓN DE DATOS)
+# MODELOS Pydantic (VALIDACIÓN / API)
 # ================================================================
 
-# Función de Pydantic Model: Nos permite definir la estructura de datos que se usarán en la FastApi. 
-# Entonces validará los datos que lleguen y estandarizará lo que devuelve la API. 
 
 class UsuarioCrear(BaseModel):
-    """Modelo para registrar un nuevo usuario."""
-    
+    """Modelo para registrar un nuevo usuario a través de la API.
+
+    Valida y estandariza los datos recibidos.
+    """
+
     nombre_usuario: str = Field(..., min_length=3, max_length=20)
     contraseña: str = Field(..., min_length=6)
     nombre_completo: Optional[str] = None
@@ -68,15 +76,15 @@ class UsuarioCrear(BaseModel):
 
 
 class UsuarioPublico(BaseModel):
-    """ Modelo para mostrar datos públicos del usuario. """
-    
+    """Modelo para exponer datos públicos de un usuario."""
+
     nombre_usuario: str
     nombre_completo: Optional[str] = None
-    tipo: str   # <- nuevo
+    tipo: str  # 'admin' o 'normal'
 
 
 class Token(BaseModel):
-    """ Token JWT devuelto al iniciar sesión. """
-    
+    """Representa un token JWT devuelto al iniciar sesión."""
+
     access_token: str
     token_type: str = "bearer"

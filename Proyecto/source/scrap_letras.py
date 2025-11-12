@@ -1,17 +1,33 @@
 import os
-import time
-import pandas as pd
-
-"""
-Crear una función que cargue los datos del CSV a la base de datos de 'datos_financieros.db'
-Asegurarse que cuando se ejecute la función, al menos en datos_financieros, elimine las filas 
-que ya estan y cargue las nuevas.
-"""
-import os
 import sqlite3
 import pandas as pd
 
+"""
+Funcionalidad:
+Cargar datos de un CSV a la base de datos SQLite 'datos_financieros.db'.
+
+Reglas:
+- La tabla especificada se elimina si existía y se crea desde cero.
+- Se insertan los nuevos datos del CSV.
+- Los valores numéricos se normalizan a float.
+- La columna 'fecha_vencimiento' se mantiene en formato YYYY-MM-DD.
+"""
+
+
 def _to_float(val):
+    """
+    Convierte un valor a float de manera segura.
+
+    - Elimina '%' y reemplaza ',' por '.'.
+    - Si el valor es None o NaN devuelve None.
+    - Si no se puede convertir a float, devuelve None.
+
+    Args:
+        val: valor a convertir
+
+    Returns:
+        float o None
+    """
     if val is None or (isinstance(val, float) and pd.isna(val)):
         return None
     s = str(val).replace("%", "").replace(",", ".").strip()
@@ -20,8 +36,23 @@ def _to_float(val):
     except Exception:
         return None
 
+
 def _crear_tabla_fresca(conn, tabla: str):
-    # Si existe con otro esquema, la dropeamos y la recreamos correcta
+    """
+    Elimina la tabla si existe y crea una nueva con el esquema correcto.
+
+    Esquema:
+        - nombre (TEXT, NOT NULL)
+        - moneda (TEXT, NOT NULL)
+        - ultimo (REAL)
+        - dia_pct, mes_pct, anio_pct (REAL)
+        - fecha_vencimiento (TEXT)
+        - PRIMARY KEY(nombre, moneda)
+
+    Args:
+        conn: conexión SQLite activa
+        tabla: nombre de la tabla
+    """
     conn.execute(f"DROP TABLE IF EXISTS {tabla};")
     conn.execute(f"""
         CREATE TABLE {tabla} (
@@ -36,45 +67,72 @@ def _crear_tabla_fresca(conn, tabla: str):
         )
     """)
 
+
 def reemplazar_tabla_con_csv(csv_path: str,
                              db_path: str,
                              tabla: str = "letras") -> dict:
+    """
+    Reemplaza la tabla en la base de datos usando los datos de un CSV.
+
+    Pasos:
+    1. Leer CSV como string.
+    2. Validar columnas esperadas.
+    3. Normalizar columnas numéricas a float.
+    4. Reordenar columnas según el esquema.
+    5. Crear o reemplazar la tabla en la DB.
+    6. Insertar todos los datos del CSV en la tabla.
+
+    Args:
+        csv_path: ruta del archivo CSV
+        db_path: ruta de la base de datos SQLite
+        tabla: nombre de la tabla a reemplazar (por defecto 'letras')
+
+    Returns:
+        dict información de la operación:
+        ruta DB, tabla, filas insertadas, ruta CSV
+    """
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"No se encontró el CSV: {csv_path}")
 
-    # Leemos todo como string para normalizar nosotros
+    # Leer CSV
     df = pd.read_csv(csv_path, dtype=str)
 
-    # Columnas esperadas (incluye la nueva fecha_vencimiento)
+    # Columnas esperadas
     esperadas = [
-        "nombre", "moneda", "ultimo", "dia_pct", "mes_pct", "anio_pct", "fecha_vencimiento"
+        "nombre", "moneda", "ultimo",
+        "dia_pct", "mes_pct", "anio_pct",
+        "fecha_vencimiento"
     ]
     faltan = [c for c in esperadas if c not in df.columns]
     if faltan:
         raise ValueError(f"Faltan columnas en el CSV: {faltan}")
 
-    # Normalizamos numéricos
-    df["ultimo"]  = df["ultimo"].map(_to_float)
+    # Normalizar columnas numéricas
+    df["ultimo"] = df["ultimo"].map(_to_float)
     for c in ["dia_pct", "mes_pct", "anio_pct"]:
         df[c] = df[c].map(_to_float)
 
-    # Aseguramos orden de columnas
+    # Asegurar orden de columnas
     df = df[esperadas]
 
-    # Conectamos a la DB y reemplazamos la tabla
+    # Crear carpeta de la DB si no existe
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
+
     conn = sqlite3.connect(db_path)
     try:
+        # Optimización de escritura
         conn.execute("PRAGMA journal_mode=WAL;")
         conn.execute("PRAGMA synchronous=NORMAL;")
         with conn:
             _crear_tabla_fresca(conn, tabla)
             conn.executemany(
                 f"""INSERT INTO {tabla}
-                    (nombre, moneda, ultimo, dia_pct, mes_pct, anio_pct, fecha_vencimiento)
+                    (nombre, moneda, ultimo, dia_pct, mes_pct, anio_pct,
+                     fecha_vencimiento)
                     VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 df.itertuples(index=False, name=None)
             )
+
         return {
             "db": os.path.abspath(db_path),
             "tabla": tabla,
@@ -84,118 +142,14 @@ def reemplazar_tabla_con_csv(csv_path: str,
     finally:
         conn.close()
 
+
 if __name__ == "__main__":
-    # Ajustá estas rutas a tu entorno
     carpeta_script = os.path.dirname(os.path.abspath(__file__))
-    DB = os.path.join(carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db")  # usa la db existente
-    CSV = os.path.join(carpeta_script, "..", "datasets", "letras_argentinas_vencimiento.csv")  
+    DB = os.path.join(
+        carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db"
+    )
+    CSV = os.path.join(
+        carpeta_script, "..", "datasets", "letras_argentinas_vencimiento.csv"
+    )
     info = reemplazar_tabla_con_csv(CSV, DB, tabla="letras")
     print("✅ OK:", info)
-
-
-
-
-
-
-
-"""
-A partir de acá, no se usan las siguientes funciones porque los datos que scrappeamos
-requieren de conocimiento financiero muy avanzado para poder realizar los distintos 
-calculos de las fórmulas para computar el rendimiento.
-"""
-
-# from selenium import webdriver
-# from selenium.webdriver.common.by import By
-# from selenium.webdriver.chrome.service import Service
-# from selenium.webdriver.chrome.options import Options
-# from webdriver_manager.chrome import ChromeDriverManager
-# import sqlite3
-# import re
-
-# print("Iniciando scraping de letras...")
-
-# # Ruta relativa a la base de datos existente
-# db_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "datos_financieros", "datos_financieros.db")
-
-# # Configurar Selenium
-# chrome_options = Options()
-# chrome_options.add_argument("--headless")
-# chrome_options.add_argument("--no-sandbox")
-# chrome_options.add_argument("--disable-dev-shm-usage")
-
-# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
-
-# try:
-#     driver.get("https://www.cohen.com.ar/Bursatil/Cotizacion/Letras")
-#     time.sleep(3)
-
-#     table = driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div/div[8]/div[1]/table")
-#     rows = table.find_elements(By.TAG_NAME, "tr")
-
-#     data = []
-#     for row in rows:
-#         cells = row.find_elements(By.TAG_NAME, "td")
-#         if not cells:
-#             continue
-#         fila = [c.text.strip() for c in cells]
-
-#         # Saltar filas vacías o solo con ""
-#         if all(v in ["", "null"] for v in fila):
-#             continue
-
-#         # Asegurar 15 columnas
-#         while len(fila) < 15:
-#             fila.append(None)
-#         data.append(fila[:15])
-
-# finally:
-#     driver.quit()
-
-# # Guardar en la tabla 'letras' de la base existente
-# conn = sqlite3.connect(db_path)
-# cursor = conn.cursor()
-
-# cursor.execute("""
-# CREATE TABLE IF NOT EXISTS letras (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     codigo TEXT,
-#     tipo TEXT,
-#     liquidacion TEXT,
-#     fecha TEXT,
-#     hora TEXT,
-#     moneda TEXT,
-#     variacion REAL,
-#     ultimo_precio REAL,
-#     apertura REAL,
-#     cierre_ant REAL,
-#     precio_max REAL,
-#     precio_min REAL,
-#     vn REAL,
-#     monto_negociado REAL,
-#     op REAL
-# )
-# """)
-
-# # Convertir valores numéricos
-# def limpiar_num(valor):
-#     if valor in ["", None]:
-#         return None
-#     valor = re.sub(r'[^\d,-]', '', valor).replace(".", "").replace(",", ".")
-#     try:
-#         return float(valor)
-#     except:
-#         return None
-
-# for fila in data:
-#     fila_limpia = [fila[0], fila[1], fila[2], fila[3], fila[4], fila[5]] + [limpiar_num(v) for v in fila[6:]]
-#     cursor.execute("""
-#         INSERT INTO letras (
-#             codigo, tipo, liquidacion, fecha, hora, moneda,
-#             variacion, ultimo_precio, apertura, cierre_ant,
-#             precio_max, precio_min, vn, monto_negociado, op
-#         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-#     """, fila_limpia)
-
-# conn.commit()
-# conn.close()
-# print(f"✅ Datos guardados en la base existente: {db_path}")
