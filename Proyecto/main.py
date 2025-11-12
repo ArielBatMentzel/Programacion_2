@@ -16,6 +16,8 @@ API CotizAR
 Para iniciar el servidor:
     uvicorn main:cotizar --reload
 
+http://127.0.0.1:8000/docs
+
 Endpoints principales:
     /           → mensaje de inicio
     /dolar      → último valor del dólar

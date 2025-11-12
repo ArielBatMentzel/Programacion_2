@@ -40,7 +40,11 @@ data = []
 
 
 def limpiar_numero(valor):
-    """Convierte string con decimales a float, ignorando símbolos."""
+    """
+    Convierte un string a float, ignorando símbolos y manteniendo decimales.
+    Ejemplo: "$350,25" -> 350.25
+    Retorna None si no es convertible.
+    """
     valor = re.sub(r"[^\d.,-]", "", valor).replace(",", ".")
     try:
         return float(valor)
