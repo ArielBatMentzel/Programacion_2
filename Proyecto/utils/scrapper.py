@@ -15,12 +15,16 @@ SCRAPERS_MAP = {
     "plazo_fijo": "scrap_plazos_fijos.py",
     "bono": "scrap_bono.py",
     "letras": "scrap_letras.py",
-    "bandas": "scrap_bandas_cambiarias.py"
+    "bandas": "scrap_bandas_cambiarias.py",
 }
 
-MAX_CONCURRENCY = 3  # Cantidad máxima de scrapers ejecutándose a la vez
+MAX_CONCURRENCY = 3  # Máximo de scrapers ejecutándose a la vez
+
 
 def run_scraper_blocking(nombre: str):
+    """
+    Ejecuta un scraper de forma bloqueante y muestra logs por consola.
+    """
     archivo = SCRAPERS_MAP.get(nombre)
     if not archivo:
         print(f"❌ No se encontró scraper para '{nombre}'")
@@ -39,7 +43,7 @@ def run_scraper_blocking(nombre: str):
             [sys.executable, path],
             capture_output=True,
             text=True,
-            check=False
+            check=False,
         )
         if result.stdout:
             print(result.stdout.strip())
@@ -50,19 +54,29 @@ def run_scraper_blocking(nombre: str):
         if result.returncode == 0:
             print(f"✅ {archivo} finalizó correctamente en {elapsed:.2f} s.")
         else:
-            print(f"❌ {archivo} falló con código {result.returncode} en {elapsed:.2f} s.")
+            print(
+                f"❌ {archivo} falló con código {result.returncode} "
+                f"en {elapsed:.2f} s."
+            )
     except Exception as e:
         print(f"❌ Error ejecutando {archivo}: {e}")
 
+
 def scrap(nombres: List[str]):
     """
-    Función principal para llamar desde FastAPI u otras partes.
-    Ejecuta los scrapers usando ThreadPoolExecutor con límite de concurrencia.
-    
-    Posibles nombres: "dolar", "plazo_fijo", "bono", "letras", "bandas"
-    Ejemplo: scrap(["bono","plazo_fijo"])
+    Llama a múltiples scrapers de forma concurrente con límite de threads.
+
+    Args:
+        nombres (List[str]): Lista de nombres de scrapers a ejecutar.
+            Posibles valores:
+              "dolar", "plazo_fijo", "bono", "letras", "bandas".
+
+    Ejemplo:
+        scrap(["bono", "plazo_fijo"])
     """
     with ThreadPoolExecutor(max_workers=MAX_CONCURRENCY) as executor:
-        futures = [executor.submit(run_scraper_blocking, name) for name in nombres]
+        futures = [
+            executor.submit(run_scraper_blocking, name) for name in nombres
+            ]
         for _ in as_completed(futures):
             pass
