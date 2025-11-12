@@ -10,6 +10,18 @@ from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 
 
+# Solo carga el .env si existe (útil localmente, el Render lo ignora)
+# Porque setea sus propias variables de entorno (setea el mismo el DB_URL)
+load_dotenv()
+
+DB_URL = os.getenv("DB_URL")
+
+if not DB_URL:
+    raise ValueError("⚠️ No se encontró la variable DB_URL en el entorno.")
+
+engine = create_engine(DB_URL)
+
+
 def _to_float(val):
     """
     Convierte strings con ',' y espacios a float.
@@ -27,42 +39,22 @@ def _to_float(val):
         return None
 
 
-def _crear_tabla_fresca(conn, tabla: str):
-    """
-    Elimina y recrea la tabla con el esquema correcto.
-
-    :param conn: conexión sqlite3
-    :param tabla: nombre de la tabla
-    """
-    conn.execute(f"DROP TABLE IF EXISTS {tabla};")
-    conn.execute(f"""
-        CREATE TABLE {tabla} (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            fecha TEXT NOT NULL,
-            banda_inferior REAL,
-            banda_superior REAL,
-            ancho REAL
-        )
-    """)
-
-
 def reemplazar_tabla_bandas_con_csv(
     csv_path: str,
-    db_path: str,
-    tabla: str = "bandas_cambiarias"
+    tabla: str = "datos_financieros.bandas_cambiarias"
 ) -> dict:
     """
-    Reemplaza toda la tabla de bandas cambiarias con los datos del CSV.
+    Reemplaza la tabla de bandas cambiarias en Supabase 
+    con los datos del CSV.
     - Elimina todas las filas existentes
     - Inserta los datos del CSV
-    - Transacción atómica
 
     CSV esperado:
     fecha,banda_inferior,banda_superior,ancho
 
     :param csv_path: ruta del CSV
     :param db_path: ruta de la base de datos SQLite
-    :param tabla: nombre de la tabla a reemplazar
+    :param tabla: ruta de la tabla en el Supabase a reemplazar
     :return: dict con información de la operación
     """
     if not os.path.exists(csv_path):
@@ -83,66 +75,45 @@ def reemplazar_tabla_bandas_con_csv(
     df["banda_inferior"] = df["banda_inferior"].map(_to_float)
     df["banda_superior"] = df["banda_superior"].map(_to_float)
     df["ancho"] = df["ancho"].map(_to_float)
-
-    # Crear directorio de la BD si no existe
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-
-    # Conectar y guardar
-    conn = sqlite3.connect(db_path)
-    try:
-        conn.execute("PRAGMA journal_mode=WAL;")
-        conn.execute("PRAGMA synchronous=NORMAL;")
-
-        with conn:  # transacción atómica
-            _crear_tabla_fresca(conn, tabla)
-            conn.executemany(
-                f"""INSERT INTO {tabla}
-                    (fecha, banda_inferior, banda_superior, ancho)
-                    VALUES (?, ?, ?, ?)""",
-                df[esperadas].itertuples(index=False, name=None)
-            )
-
-        return {
-            "db": os.path.abspath(db_path),
-            "tabla": tabla,
-            "filas_insertadas": len(df),
-            "csv": os.path.abspath(csv_path)
-        }
-    finally:
-        conn.close()
+    
+    # Conectar a Supabase y reemplazar tabla
+    with engine.begin() as conn:
+        conn.execute(text(f"DELETE FROM {tabla};")) # Limpiamos la tabla
+        df.to_sql(
+            tabla.split(".")[-1], # Tabla del Supabase
+            conn, 
+            schema=tabla.split(".")[0], # Esquema del Supabase
+            if_exists="append", 
+            index=False
+        )
+    
+    return {
+        "tabla": tabla,
+        "filas_insertadas": len(df),
+        "csv": os.path.abspath(csv_path)
+    }
+    
 
 
 # --- Ejecutar directo ---
 if __name__ == "__main__":
     """
     Script ejecutable que reemplaza la tabla 'bandas_cambiarias'
-      en la base de datos
-    usando un CSV local. Muestra información del resultado en consola.
+      en la base de datos usando un CSV local. 
+    Muestra información del resultado en consola.
     """
-    # Directorio del script actual
+    # Directorio del script actual y la ruta del CSV
     carpeta_script = os.path.dirname(os.path.abspath(__file__))
-
-    # Rutas de la base de datos y del CSV
-    DB = os.path.join(
-        carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db"
-        )
     CSV = os.path.join(
         carpeta_script, "..", "datasets", "bandas_nov2025_dic2028.csv"
         )
 
     try:
-        # Reemplazar tabla con los datos del CSV
-        info = reemplazar_tabla_bandas_con_csv(
-            CSV, DB, tabla="bandas_cambiarias"
-            )
-
-        # Mostrar información del reemplazo
-        print("✅ Tabla 'bandas_cambiarias' reemplazada correctamente:")
+        info = reemplazar_tabla_bandas_con_csv(CSV)
+        print("✅ Tabla 'bandas_cambiarias' reemplazada correctamente en Supabase:")
         for k, v in info.items():
             print(f"  {k}: {v}")
-
     except Exception as e:
-        # Mostrar error completo en consola
         print(f"❌ Error: {e}")
         import traceback
         traceback.print_exc()
