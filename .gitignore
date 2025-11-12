@@ -25,3 +25,6 @@ __pycache__/
 factory/
 decorator/
 observer/
+
+# Código que no se usa en producción
+codigo_no_utilizado/

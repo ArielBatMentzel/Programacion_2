@@ -1,13 +1,11 @@
 """
-Carga los datos de bandas cambiarias desde CSV a la 
-base de datos de Supabase.
+Carga los datos de bandas cambiarias desde CSV a la base de datos.
 Elimina las filas existentes y carga las nuevas.
 """
 
 import os
+import sqlite3
 import pandas as pd
-from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
 
 
 def _to_float(val):
@@ -146,3 +144,90 @@ if __name__ == "__main__":
         print(f"❌ Error: {e}")
         import traceback
         traceback.print_exc()
+
+
+"""
+A partir de acá, no se usan las siguientes funciones
+porque los datos que scrappeamos
+requieren de conocimiento financiero muy avanzado
+para poder realizar los distintos
+calculos de las fórmulas para computar el rendimiento.
+"""
+
+
+# import os
+# import sqlite3
+# from selenium import webdriver
+# from selenium.webdriver.common.by import By
+# from selenium.webdriver.chrome.service import Service
+# from selenium.webdriver.chrome.options import Options
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
+# from webdriver_manager.chrome import ChromeDriverManager
+
+# print("Inicio del scraping de bandas cambiarias...")
+
+# # Configurar Chrome headless
+# options = Options()
+# options.add_argument("--headless=new")
+# options.add_argument("--no-sandbox")
+# options.add_argument("--disable-dev-shm-usage")
+# options.add_argument("--disable-gpu")
+
+# # Rutas
+# carpeta_script = os.path.dirname(os.path.abspath(__file__))
+# db_path = os.path.join(carpeta_script, "..", "db",
+# "datos_financieros", "datos_financieros.db")
+
+# # Iniciar navegador
+# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),
+#  options=options)
+# driver.get("https://www.bcra.gob.ar/PublicacionesEstadisticas/bandas-cambiarias-piso-techo.asp")
+
+# # Esperar que la tabla esté presente
+# tabla = WebDriverWait(driver, 15).until(
+#     EC.presence_of_element_located((By.XPATH, "//table"))
+# )
+# filas = tabla.find_elements(By.TAG_NAME, "tr")
+
+# # Extraer datos
+# datos = []
+# for fila in filas[1:]:
+#     celdas = fila.find_elements(By.TAG_NAME, "td")
+#     if len(celdas) >= 3:
+#         fecha = celdas[0].text.strip()
+#         banda_inferior = float(celdas[1].text.strip().replace(".", "").
+# replace(",", ".").replace("$", ""))
+#         banda_superior = float(celdas[2].text.strip().replace(".", "").
+# replace(",", ".").replace("$", ""))
+#         datos.append((fecha, banda_inferior, banda_superior))
+
+# driver.quit()
+# print(f"✅ Datos extraídos: {len(datos)} filas")
+
+# # Guardar en la base de datos existente (reemplazando la tabla)
+# conn = sqlite3.connect(db_path)
+# cursor = conn.cursor()
+
+# # Eliminar tabla anterior si existe
+# cursor.execute("DROP TABLE IF EXISTS bandas_cambiarias")
+
+# # Crear tabla nueva
+# cursor.execute("""
+# CREATE TABLE bandas_cambiarias (
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     fecha TEXT,
+#     banda_inferior REAL,
+#     banda_superior REAL
+# )
+# """)
+
+# # Insertar nuevos datos
+# cursor.executemany("""
+# INSERT INTO bandas_cambiarias (fecha, banda_inferior, banda_superior)
+# VALUES (?, ?, ?)
+# """, datos)
+
+# conn.commit()
+# conn.close()
+# print(f"✅ Tabla reemplazada y datos guardados en: {db_path}")
