@@ -57,6 +57,9 @@ def reemplazar_tabla_bandas_con_csv(
     :param tabla: ruta de la tabla en el Supabase a reemplazar
     :return: dict con información de la operación
     """
+    esquema_db = tabla.split(".")[0]
+    tabla_db = tabla.split(".")[-1]
+    
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"No se encontró el CSV: {csv_path}")
 
@@ -79,10 +82,13 @@ def reemplazar_tabla_bandas_con_csv(
     # Conectar a Supabase y reemplazar tabla
     with engine.begin() as conn:
         conn.execute(text(f"DELETE FROM {tabla};")) # Limpiamos la tabla
+        conn.execute(
+            text(f"ALTER SEQUENCE {esquema_db}.{tabla_db}_id_seq RESTART WITH 1;")
+        )
         df.to_sql(
-            tabla.split(".")[-1], # Tabla del Supabase
+            tabla_db, # Tabla del Supabase
             conn, 
-            schema=tabla.split(".")[0], # Esquema del Supabase
+            schema=esquema_db, # Esquema del Supabase
             if_exists="append", 
             index=False
         )
