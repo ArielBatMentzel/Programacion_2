@@ -7,22 +7,30 @@ import threading
 from typing import List
 from models.instruments import FixedIncomeInstrument
 
-# Ruta absoluta/relativa a la DB desde este archivo
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "db", "datos_financieros", "datos_financieros.db")
+DB_PATH = os.path.join(
+    os.path.dirname(__file__),
+    "..", "db", "datos_financieros", "datos_financieros.db"
+)
 
 
 class Dolar:
     """
-    Modelo Dolar (Observer).  
-    - Carga valor inicial leyendo la tabla `dolar` (columna venta).  
+    Modelo Dolar (Observer).
+    - Carga valor inicial leyendo la tabla `dolar` (columna venta).
     - Al actualizar, inserta una fila compatible con la estructura real:
-      (tipo, compra, venta, variacion).
+    (tipo, compra, venta, variacion).
     - Puede monitorear la base de datos y detectar cambios automáticos.
     """
 
-    def __init__(self, valor_inicial: float = None, tipo_por_defecto: str = "DÓLAR BLUE"):
+    def __init__(
+        self,
+        valor_inicial: float = None,
+        tipo_por_defecto: str = "DÓLAR BLUE"
+    ):
+
         self.tipo_por_defecto = tipo_por_defecto
-        self.valor_actual = valor_inicial if valor_inicial is not None else self._cargar_desde_db()
+        self.valor_actual = valor_inicial if valor_inicial is not None else \
+            self._cargar_desde_db()
         self.observadores: List[FixedIncomeInstrument] = []
         self._monitoreo_activo = False
 
@@ -50,19 +58,23 @@ class Dolar:
             try:
                 instrumento.actualizar(self.valor_actual)
             except Exception as e:
-                print(f"⚠️ Error al notificar {getattr(instrumento, 'nombre', instrumento)}: {e}")
+                nombre = getattr(instrumento, 'nombre', instrumento)
+                print(f"⚠️ Error al notificar {nombre}: {e}")
 
     # --- Lectura desde DB ---
     def _cargar_desde_db(self) -> float:
         try:
             conn = sqlite3.connect(DB_PATH)
             cur = conn.cursor()
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT venta FROM dolar
                 WHERE tipo = ?
                 ORDER BY id DESC
                 LIMIT 1
-            """, (self.tipo_por_defecto,))
+                """,
+                (self.tipo_por_defecto,)
+            )
             row = cur.fetchone()
             if not row:
                 cur.execute("SELECT venta FROM dolar ORDER BY id DESC LIMIT 1")
@@ -76,7 +88,8 @@ class Dolar:
     def _guardar_en_db(self, venta_valor: float, tipo: str):
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
-        cur.execute("""
+        cur.execute(
+            """
             CREATE TABLE IF NOT EXISTS dolar (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 tipo TEXT,
@@ -84,11 +97,14 @@ class Dolar:
                 venta REAL,
                 variacion REAL
             )
-        """)
+            """
+        )
         cur.execute(
-            "INSERT INTO dolar (tipo, compra, venta, variacion) VALUES (?, ?, ?, ?)",
+            "INSERT INTO dolar (tipo, compra, venta, variacion) "
+            "VALUES (?, ?, ?, ?)",
             (tipo, None, venta_valor, None)
         )
+
         conn.commit()
         conn.close()
 
@@ -101,7 +117,10 @@ class Dolar:
             nuevo_valor = float(data["oficial"]["value_sell"])
             self.actualizar_valor(nuevo_valor, tipo="DÓLAR OFICIAL")
         except Exception as e:
-            print(f"⚠️ No se pudo obtener dólar desde la API de ejemplo: {e}")
+            print(
+                "⚠️ No se pudo obtener dólar desde la API de ejemplo: "
+                f"{e}"
+            )
 
     # --- Monitoreo automático ---
     def iniciar_monitoreo(self, intervalo_segundos: int = 60):
@@ -114,11 +133,16 @@ class Dolar:
         self._monitoreo_activo = True
 
         def ciclo():
-            print(f"🕒 Monitoreo de dólar iniciado (cada {intervalo_segundos}s)")
+            print(
+                f"🕒 Monitoreo de dólar iniciado "
+                f"(cada {intervalo_segundos}s)"
+            )
+
             while self._monitoreo_activo:
                 try:
                     nuevo_valor = self._cargar_desde_db()
-                    if nuevo_valor and abs(nuevo_valor - self.valor_actual) > 0.0001:
+                    if nuevo_valor and \
+                       abs(nuevo_valor - self.valor_actual) > 0.0001:
                         print(f"📈 Nuevo valor detectado en DB: {nuevo_valor}")
                         self.valor_actual = nuevo_valor
                         self._notificar_observadores()

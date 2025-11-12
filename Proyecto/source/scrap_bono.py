@@ -1,13 +1,25 @@
 """
-Crear una función que cargue los datos del CSV a la base de datos de 'datos_financieros.db'
-Asegurarse que cuando se ejecute la función, al menos en datos_financieros, elimine las filas 
-que ya estan y cargue las nuevas.
+Función para reemplazar los datos de bonos
+en la base de datos 'datos_financieros.db'
+a partir de un CSV local. Siempre elimina los datos previos
+y crea la tabla con el esquema correcto.
 """
+
 import os
 import sqlite3
 import pandas as pd
 
+
 def _to_float(val):
+    """
+    Convierte valores a float.
+    
+    Args:
+        val: str, int, float o None. Puede tener comas, espacios o '%'.
+    
+    Returns:
+        float o None si no se puede convertir.
+    """
     if val is None or (isinstance(val, float) and pd.isna(val)):
         return None
     s = str(val).replace("%", "").replace(",", ".").strip()
@@ -18,7 +30,13 @@ def _to_float(val):
 
 
 def _crear_tabla_fresca(conn, tabla: str):
-    # si existe con otro esquema, la volamos y la recreamos con el correcto
+    """
+    Elimina y recrea la tabla con el esquema correcto para los bonos.
+    
+    Args:
+        conn: sqlite3.Connection
+        tabla: nombre de la tabla a crear
+    """
     conn.execute(f"DROP TABLE IF EXISTS {tabla};")
     conn.execute(f"""
         CREATE TABLE {tabla} (
@@ -34,24 +52,44 @@ def _crear_tabla_fresca(conn, tabla: str):
     """)
 
 
-def reemplazar_tabla_con_csv(csv_path: str, db_path: str, tabla: str = "bonos") -> dict:
+def reemplazar_tabla_con_csv(
+        csv_path: str, db_path: str, tabla: str = "bonos"
+        ) -> dict:
+    """
+    Reemplaza toda la tabla de bonos con los datos de un CSV.
+    
+    Args:
+        csv_path: ruta al archivo CSV
+        db_path: ruta a la base de datos SQLite
+        tabla: nombre de la tabla en la base de datos
+    
+    Returns:
+        dict con info: db, tabla, filas_insertadas, csv
+    """
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"No se encontró el CSV: {csv_path}")
 
+    # Leer CSV y verificar columnas
     df = pd.read_csv(csv_path, dtype=str)
-    esperadas = ["nombre", "moneda", "ultimo",
-                 "dia_pct", "mes_pct", "anio_pct", "fecha_vencimiento"]
+    esperadas = [
+        "nombre", "moneda", "ultimo",
+        "dia_pct", "mes_pct", "anio_pct", "fecha_vencimiento"
+        ]
     faltantes = [c for c in esperadas if c not in df.columns]
     if faltantes:
         raise ValueError(
-            f"El CSV debe incluir columnas {esperadas}. Faltan: {faltantes}")
+            f"El CSV debe incluir columnas {esperadas}. Faltan: {faltantes}"
+            )
 
+    # Normalizar numéricas
     df["ultimo"] = df["ultimo"].map(_to_float)
     for c in ["dia_pct", "mes_pct", "anio_pct"]:
         df[c] = df[c].map(_to_float)
 
+    # Formatear fecha
     df["fecha_vencimiento"] = pd.to_datetime(
-        df["fecha_vencimiento"], errors="coerce").dt.strftime("%Y-%m-%d")
+        df["fecha_vencimiento"], errors="coerce").dt.strftime("%Y-%m-%d"
+                                                              )
 
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
     conn = sqlite3.connect(db_path)
@@ -60,32 +98,52 @@ def reemplazar_tabla_con_csv(csv_path: str, db_path: str, tabla: str = "bonos") 
         conn.execute("PRAGMA synchronous=NORMAL;")
 
         with conn:  # transacción atómica
-            # <- SIEMPRE recrea la tabla con el esquema correcto
             _crear_tabla_fresca(conn, tabla)
             conn.executemany(
-                f"""INSERT INTO {tabla}
-                    (nombre, moneda, ultimo, dia_pct, mes_pct, anio_pct, fecha_vencimiento)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                f"""INSERT INTO {tabla} (
+                    nombre,
+                    moneda,
+                    ultimo,
+                    dia_pct,
+                    mes_pct,
+                    anio_pct,
+                    fecha_vencimiento
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 df[esperadas].itertuples(index=False, name=None)
             )
 
-        return {"db": os.path.abspath(db_path), "tabla": tabla, "filas_insertadas": len(df), "csv": os.path.abspath(csv_path)}
+        return {
+            "db": os.path.abspath(db_path),
+            "tabla": tabla,
+            "filas_insertadas": len(df),
+            "csv": os.path.abspath(csv_path)
+        }
     finally:
         conn.close()
 
 
 # --- Ejecutar directo ---
 if __name__ == "__main__":
+    """
+    Ejecuta la función usando un CSV específico y muestra info del reemplazo.
+    """
     carpeta_script = os.path.dirname(os.path.abspath(__file__))
-    DB = os.path.join(carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db")  # usa la db existente
-    CSV = os.path.join(carpeta_script, "..", "datasets", "bonos_argentinos_vencimiento.csv")  
+    DB = os.path.join(
+        carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db"
+        )
+    CSV = os.path.join(
+        carpeta_script, "..", "datasets", "bonos_argentinos_vencimiento.csv"
+        )
+
     info = reemplazar_tabla_con_csv(CSV, DB, tabla="bonos")
     print("✅ OK:", info)
 
 
 """
-A partir de acá, no se usan las siguientes funciones porque los datos que scrappeamos
-requieren de conocimiento financiero muy avanzado para poder realizar los distintos 
+A partir de acá, no se usan las siguientes
+ funciones porque los datos que scrappeamos
+requieren de conocimiento financiero muy avanzado
+ para poder realizar los distintos 
 calculos de las fórmulas para computar el rendimiento.
 """
 
@@ -108,12 +166,16 @@ calculos de las fórmulas para computar el rendimiento.
 # options.add_argument("--disable-gpu")
 
 # # Carpeta del proyecto y base de datos
-# carpeta_proyecto = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-# db_path = os.path.join(carpeta_proyecto, "db","datos_financieros", "datos_financieros.db")
-# os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Crear carpeta si no existe
+# carpeta_proyecto = os.path.abspath
+# (os.path.join(os.path.dirname(__file__), ".."))
+# db_path = os.path.join(carpeta_proyecto,
+# "db","datos_financieros", "datos_financieros.db")
+# os.makedirs(os.path.dirname(db_path),
+# exist_ok=True)  # Crear carpeta si no existe
 
 # # Iniciar navegador
-# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+# driver = webdriver.Chrome(service=Service(ChromeDriverManager()
+# .install()), options=options)
 # driver.get("https://www.rava.com/cotizaciones/bonos")
 # time.sleep(5)  # Esperar a que cargue la tabla
 
@@ -128,7 +190,8 @@ calculos de las fórmulas para computar el rendimiento.
 #         fila_datos = []
 #         for i, c in enumerate(celdas):
 #             valor = c.get_attribute("textContent").strip()
-#             # Convertir a float los valores numéricos, excepto la primera columna y "-" vacío
+#             # Convertir a float los valores numéricos,
+#  excepto la primera columna y "-" vacío
 #             if i != 0 and valor not in ["-", ""]:
 #                 valor = valor.replace(".", "").replace(",", ".")
 #                 try:

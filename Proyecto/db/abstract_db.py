@@ -1,12 +1,12 @@
-# archivo: db/abstract_db.py
-
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional
+
 
 class AbstractDatabase(ABC):
     """
     Clase base abstracta para todas las bases de datos del proyecto.
-    Define la interfaz que deben implementar todas las DB concretas (instrumentos, usuarios, etc.)
+    Define la interfaz que deben implementar todas las DB concretas
+    (instrumentos, usuarios, etc.)
     """
 
     @abstractmethod
