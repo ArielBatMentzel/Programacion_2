@@ -161,7 +161,7 @@ Si hay cambios en el código se vuelve a ejecutar en terminal (reemplaza todo lo
 1. docker build -t cotizar-api:latest .
 2. docker run -p 8000:8000 -e PORT=8000 cotizar-api:latest (para que funcione con render)
 
-o para crear el contenedor y que se borre solo cuando termina de ejecutarse:
+o para crear el contenedor y que se borre solo cuando termina de ejecutarse el comando:
 docker run --rm -p 8000:8000 cotizar-api:latest 
 
 activar docker:
