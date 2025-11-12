@@ -1,0 +1,36 @@
+# Entornos virtuales
+venv/
+.venv/
+*/venv/
+*/.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyd
+
+# Local DBs
+*.db
+*.sqlite
+*.sqlite3
+
+# Env files / secrets
+.env
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Tests
+tests/
+
+# Git / build artifacts
+.git
+.gitignore
+*.log
+
+# Node (si hay frontend etc)
+node_modules/
+dist/
+build/

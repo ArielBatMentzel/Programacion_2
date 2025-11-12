@@ -1,16 +1,31 @@
 Proyecto/
-    config.py
+    .dockerignore
+    Dockerfile
     main.py
-    prueba.py
     README.md
     requirements.txt
 
     auth/
+        auth_api.py
+        auth_service.py
         __init__.py
        auth_api.py
        auth_service.py
 
     db/
+        abstract_db.py
+        datos_financieros.db
+        datos_financieros/
+            crear_db_financieros.py
+            datos_financieros.db
+            __init__.py
+        usuarios/
+            crear_admin.py
+            users_db.py
+            usuarios.db
+            __init__.py
+    factory/
+        fixed_income_factory.py
         __init__.py
         abstract_db.py
         datos_financieros/
@@ -45,9 +60,10 @@ Proyecto/
         test_instruments.py
 
     utils/
-        estructura.py
+        armar_estructura_txt.py
         helpers.py
         obtener_banda_cambiaria.py
         obtener_ultimo_valor_dolar.py
         scrapper.py
+        test.py
         __init__.py

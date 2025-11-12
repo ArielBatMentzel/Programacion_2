@@ -35,11 +35,3 @@ class AbstractDatabase(ABC):
         :return: lista de objetos
         """
         pass
-
-    @abstractmethod
-    def actualizar(self, objeto: Any):
-        """
-        Actualiza un objeto existente en la base de datos.
-        :param objeto: instancia de objeto con datos actualizados
-        """
-        pass

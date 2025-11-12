@@ -53,7 +53,7 @@ for b in bloques:
         continue
 
 driver.quit()
-print("✅ Datos extraídos de la web.")
+print("Datos extraídos de la web.")
 
 # Guardar en la base existente
 conn = sqlite3.connect(db_path)
@@ -81,5 +81,5 @@ VALUES (?, ?, ?, ?)
 
 conn.commit()
 conn.close()
-print(f"✅ Tabla reemplazada y datos guardados en: {db_path}")
+print(f"Tabla reemplazada y datos guardados en: {db_path}")
 print("Fin del scraping de dólar.")

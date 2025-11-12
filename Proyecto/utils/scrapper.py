@@ -1,11 +1,12 @@
 # archivo: Proyecto/utils/scrap_runner.py
-import asyncio
-import subprocess
-from typing import List
-import time
 import os
+import sys
+import time
+from typing import List
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import subprocess
 
-# Base de scrapers
+# Carpeta donde están los scrapers
 SCRAPERS_DIR = os.path.join(os.path.dirname(__file__), "..", "source")
 
 # Map "nombre fácil" -> archivo dentro de source/
@@ -17,9 +18,9 @@ SCRAPERS_MAP = {
     "bandas": "scrap_bandas_cambiarias.py"
 }
 
-MAX_CONCURRENCY = 3
+MAX_CONCURRENCY = 3  # Cantidad máxima de scrapers ejecutándose a la vez
 
-async def run_scraper(nombre: str):
+def run_scraper_blocking(nombre: str):
     archivo = SCRAPERS_MAP.get(nombre)
     if not archivo:
         print(f"❌ No se encontró scraper para '{nombre}'")
@@ -32,39 +33,36 @@ async def run_scraper(nombre: str):
 
     print(f"▶ Ejecutando {archivo} ...")
     start = time.time()
-    
-    import sys
 
-    proc = await asyncio.create_subprocess_exec(
-        sys.executable, path,  # 👈 usa el mismo intérprete actual
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    
-    stdout, stderr = await proc.communicate()
-    
-    if stdout:
-        print(stdout.decode().strip())
-    if stderr:
-        print(stderr.decode().strip())
-    
-    elapsed = time.time() - start
-    if proc.returncode == 0:
-        print(f"✅ {archivo} finalizó correctamente en {elapsed:.2f} s.")
-    else:
-        print(f"❌ {archivo} falló con código {proc.returncode} en {elapsed:.2f} s.")
+    try:
+        result = subprocess.run(
+            [sys.executable, path],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        if result.stdout:
+            print(result.stdout.strip())
+        if result.stderr:
+            print(result.stderr.strip())
 
-
-async def _scrap_limited(names: List[str]):
-    semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
-
-    async def sem_task(name):
-        async with semaphore:
-            await run_scraper(name)
-    
-    await asyncio.gather(*(sem_task(name) for name in names))
-
+        elapsed = time.time() - start
+        if result.returncode == 0:
+            print(f"✅ {archivo} finalizó correctamente en {elapsed:.2f} s.")
+        else:
+            print(f"❌ {archivo} falló con código {result.returncode} en {elapsed:.2f} s.")
+    except Exception as e:
+        print(f"❌ Error ejecutando {archivo}: {e}")
 
 def scrap(nombres: List[str]):
-    """Ejemplo: scrap(["bono","plazo_fijo"])"""
-    asyncio.run(_scrap_limited(nombres))
+    """
+    Función principal para llamar desde FastAPI u otras partes.
+    Ejecuta los scrapers usando ThreadPoolExecutor con límite de concurrencia.
+    
+    Posibles nombres: "dolar", "plazo_fijo", "bono", "letras", "bandas"
+    Ejemplo: scrap(["bono","plazo_fijo"])
+    """
+    with ThreadPoolExecutor(max_workers=MAX_CONCURRENCY) as executor:
+        futures = [executor.submit(run_scraper_blocking, name) for name in nombres]
+        for _ in as_completed(futures):
+            pass
