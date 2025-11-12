@@ -36,4 +36,4 @@ dist/
 build/
 
 # Código que no se usa en producción
-codigo_no_utilizado/
+codigo_local/
