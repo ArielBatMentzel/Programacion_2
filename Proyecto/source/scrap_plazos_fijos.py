@@ -2,9 +2,11 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import WebDriverException
 import sqlite3
 import os
 import time
+import shutil
 
 print("Inicio del scraping de plazos fijos...")
 
@@ -19,7 +21,14 @@ options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+# Abrir navegador (se autorepara si ChromeDriver falla)
+try:
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+except WebDriverException as e:
+    print("⚠️ Error con ChromeDriver, limpiando caché y reintentando...")
+    shutil.rmtree(os.path.expanduser("~/.wdm"), ignore_errors=True)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
 driver.get("https://comparatasas.ar/plazos-fijos")
 time.sleep(5)  # Esperar carga dinámica
 
@@ -51,14 +60,13 @@ for p in plazos:
 driver.quit()
 print(f"✅ Datos extraídos: {len(data)} filas")
 
-# Guardar en la base existente
+# Guardamos en la base existente
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
-# 🟢 CAMBIO 1: eliminar la tabla anterior si existe
+# Eliminamos la tabla anterior si existe
 cursor.execute("DROP TABLE IF EXISTS plazos_fijos")
-
-# 🟢 CAMBIO 2: crear tabla desde cero (sin IF NOT EXISTS)
+# Creamos tabla desde cero
 cursor.execute("""
 CREATE TABLE plazos_fijos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,8 +75,7 @@ CREATE TABLE plazos_fijos (
     tasa_pct REAL
 )
 """)
-
-# 🟢 CAMBIO 3: insertar todos los registros de una vez
+# Insertamos todos los registros de una vez
 cursor.executemany("""
 INSERT INTO plazos_fijos (banco, plazo, tasa_pct)
 VALUES (?, ?, ?)
@@ -76,5 +83,6 @@ VALUES (?, ?, ?)
 
 conn.commit()
 conn.close()
+
 print(f"✅ Tabla reemplazada y datos guardados en: {db_path}")
 print("Fin del scraping de plazos fijos.")

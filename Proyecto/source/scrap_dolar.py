@@ -5,9 +5,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.common.exceptions import WebDriverException
 import sqlite3
 import os
 import re
+import shutil
 
 print("Iniciando scraping de dólar...")
 
@@ -22,12 +24,19 @@ options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-# Abrir navegador
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+# Abrir navegador (se autorepara si ChromeDriver falla)
+try:
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+except WebDriverException as e:
+    print("⚠️ Error con ChromeDriver, limpiando caché y reintentando...")
+    shutil.rmtree(os.path.expanduser("~/.wdm"), ignore_errors=True)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+
+# Abrir página
 driver.get("https://dolarhoy.com/")
 wait = WebDriverWait(driver, 10)
 
-# Bloques de cotización
+# Extraer los datos
 bloques = wait.until(EC.presence_of_all_elements_located(
     (By.CSS_SELECTOR, "div.tile.is-child, div.tile.is-child.only-mobile")
 ))
@@ -59,10 +68,9 @@ print("Datos extraídos de la web.")
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
-# 🟢 CAMBIO 1: eliminar la tabla anterior si existe
+# Eliminamos la tabla anterior si existe 
 cursor.execute("DROP TABLE IF EXISTS dolar")
-
-# 🟢 CAMBIO 2: crear la tabla desde cero (sin IF NOT EXISTS)
+# Creamos la tabla desde cero 
 cursor.execute("""
 CREATE TABLE dolar (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,8 +80,7 @@ CREATE TABLE dolar (
     variacion REAL
 )
 """)
-
-# 🟢 CAMBIO 3: insertar todos los registros de una vez con executemany()
+# Insertamos todos los registros de una vez con executemany()
 cursor.executemany("""
 INSERT INTO dolar (tipo, compra, venta, variacion)
 VALUES (?, ?, ?, ?)
@@ -81,5 +88,6 @@ VALUES (?, ?, ?, ?)
 
 conn.commit()
 conn.close()
-print(f"Tabla reemplazada y datos guardados en: {db_path}")
+
+print(f"✅ Tabla reemplazada y datos guardados en: {db_path}")
 print("Fin del scraping de dólar.")
