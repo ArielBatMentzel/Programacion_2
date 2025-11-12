@@ -24,3 +24,14 @@ def obtener_ultimo_valor_dolar(tipo="DÓLAR BLUE"):
         return float(row[0])
     else:
         raise ValueError(f"No se encontró el valor del dólar para el tipo '{tipo}'.")
+
+
+def obtener_dolar_oficial():
+    """Helper para obtener el último valor del DÓLAR OFICIAL desde la BD."""
+    scrap(["dolar"])
+    try:
+        
+        return obtener_ultimo_valor_dolar('DÓLAR OFICIAL')
+    except Exception as e:
+        print(f"⚠️ Error obteniendo dólar oficial: {e}")
+        return None

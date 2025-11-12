@@ -7,7 +7,90 @@ Crear una función que cargue los datos del CSV a la base de datos de 'datos_fin
 Asegurarse que cuando se ejecute la función, al menos en datos_financieros, elimine las filas 
 que ya estan y cargue las nuevas.
 """
+import os
+import sqlite3
+import pandas as pd
 
+def _to_float(val):
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return None
+    s = str(val).replace("%", "").replace(",", ".").strip()
+    try:
+        return float(s)
+    except Exception:
+        return None
+
+def _crear_tabla_fresca(conn, tabla: str):
+    # Si existe con otro esquema, la dropeamos y la recreamos correcta
+    conn.execute(f"DROP TABLE IF EXISTS {tabla};")
+    conn.execute(f"""
+        CREATE TABLE {tabla} (
+            nombre             TEXT NOT NULL,
+            moneda             TEXT NOT NULL,
+            ultimo             REAL,
+            dia_pct            REAL,
+            mes_pct            REAL,
+            anio_pct           REAL,
+            fecha_vencimiento  TEXT,
+            PRIMARY KEY (nombre, moneda)
+        )
+    """)
+
+def reemplazar_tabla_con_csv(csv_path: str,
+                             db_path: str,
+                             tabla: str = "letras") -> dict:
+    if not os.path.exists(csv_path):
+        raise FileNotFoundError(f"No se encontró el CSV: {csv_path}")
+
+    # Leemos todo como string para normalizar nosotros
+    df = pd.read_csv(csv_path, dtype=str)
+
+    # Columnas esperadas (incluye la nueva fecha_vencimiento)
+    esperadas = [
+        "nombre", "moneda", "ultimo", "dia_pct", "mes_pct", "anio_pct", "fecha_vencimiento"
+    ]
+    faltan = [c for c in esperadas if c not in df.columns]
+    if faltan:
+        raise ValueError(f"Faltan columnas en el CSV: {faltan}")
+
+    # Normalizamos numéricos
+    df["ultimo"]  = df["ultimo"].map(_to_float)
+    for c in ["dia_pct", "mes_pct", "anio_pct"]:
+        df[c] = df[c].map(_to_float)
+
+    # Aseguramos orden de columnas
+    df = df[esperadas]
+
+    # Conectamos a la DB y reemplazamos la tabla
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+        conn.execute("PRAGMA synchronous=NORMAL;")
+        with conn:
+            _crear_tabla_fresca(conn, tabla)
+            conn.executemany(
+                f"""INSERT INTO {tabla}
+                    (nombre, moneda, ultimo, dia_pct, mes_pct, anio_pct, fecha_vencimiento)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                df.itertuples(index=False, name=None)
+            )
+        return {
+            "db": os.path.abspath(db_path),
+            "tabla": tabla,
+            "filas_insertadas": len(df),
+            "csv": os.path.abspath(csv_path),
+        }
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    # Ajustá estas rutas a tu entorno
+    carpeta_script = os.path.dirname(os.path.abspath(__file__))
+    DB = os.path.join(carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db")  # usa la db existente
+    CSV = os.path.join(carpeta_script, "..", "datasets", "letras_argentinas_vencimiento.csv")  
+    info = reemplazar_tabla_con_csv(CSV, DB, tabla="letras")
+    print("✅ OK:", info)
 
 
 

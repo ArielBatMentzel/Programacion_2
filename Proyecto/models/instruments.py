@@ -1,7 +1,23 @@
 # archivo: Proyecto/models/instruments.py
 
 from abc import ABC, abstractmethod
+import sqlite3
+import os
 from utils.obtener_banda_cambiaria import obtener_banda_cambiaria
+from utils.obtener_ultimo_valor_dolar import obtener_dolar_oficial
+from datetime import date, datetime, timedelta
+
+
+
+def _mes_banda_de_salida(mes_inicio: str | None, fecha_inicio: date | None, dias: int) -> str:
+    """Devuelve 'YYYY-MM' del mes final (inicio + dias)."""
+    if mes_inicio:
+        y, m = mes_inicio.split("-")
+        start = date(int(y), int(m), 1)
+    else:
+        start = fecha_inicio or date.today()
+    fin = start + timedelta(days=int(dias))
+    return f"{fin.year:04d}-{fin.month:02d}"
 
 
 # -------------------- Clase base --------------------
@@ -21,17 +37,16 @@ class FixedIncomeInstrument(ABC):
     def calcular_rendimiento(self, monto_inicial: float, tipo_cambio_actual: float):
         pass
 
-    @abstractmethod
     def actualizar(self, valor_dolar: float):
         self.valor_dolar = valor_dolar
-        pass
 
     @abstractmethod
-    def rendimiento_vs_banda(self, monto_inicial: float, fecha: str = None):
+    def rendimiento_vs_banda(self, monto_inicial: float, mes: str = None):
         """Calcula el rendimiento considerando el techo de la banda cambiaria."""
         pass
 
 # -------------------- Plazo Fijo --------------------
+
 
 class PlazoFijo(FixedIncomeInstrument):
     def __init__(self, nombre: str, moneda: str, dias: int, tasa_tna: float):
@@ -39,309 +54,272 @@ class PlazoFijo(FixedIncomeInstrument):
         self.dias = dias
         self.tasa_tna = tasa_tna
 
-    def calcular_rendimiento(self, monto_inicial: float, tipo_cambio_actual: float):
+    def calcular_rendimiento(self, monto_inicial: float, tipo_cambio_actual: float = None):
         n = 365 / self.dias
         tasa_efectiva_anual = (1 + self.tasa_tna / (100 * n)) ** n - 1
-        rendimiento_periodo = (1 + tasa_efectiva_anual) ** (self.dias / 365) - 1
+        rendimiento_periodo = (
+            1 + tasa_efectiva_anual) ** (self.dias / 365) - 1
         monto_final = monto_inicial * (1 + rendimiento_periodo)
         ganancia_pesos = monto_final - monto_inicial
-        ganancia_usd = ganancia_pesos / tipo_cambio_actual if tipo_cambio_actual else None
         return {
             "tna": self.tasa_tna,
             "tea": round(tasa_efectiva_anual * 100, 2),
             "monto_final_pesos": round(monto_final, 2),
             "ganancia_pesos": round(ganancia_pesos, 2),
-            "ganancia_usd": round(ganancia_usd, 2) if ganancia_usd else None
         }
 
     def actualizar(self, valor_dolar: float):
         self.valor_dolar = valor_dolar
 
-    def rendimiento_vs_banda(self, monto_inicial: float, fecha: str = None):
-        _, techo = obtener_banda_cambiaria(fecha)
+    def rendimiento_vs_banda(self, monto_inicial: float, mes: str = None):
+        _, techo = obtener_banda_cambiaria(mes)
         if not techo or techo <= 0:
             return None
 
-        rend = self.calcular_rendimiento(monto_inicial, techo)
-
+    # El rendimiento del PF se calcula directo en ARS
+        # debe devolver "monto_final" en ARS
+        rend = self.calcular_rendimiento(monto_inicial)
         monto_final_pesos = rend["monto_final_pesos"]
 
-        factor_ars = monto_final_pesos / monto_inicial     # Factor de crecimiento en pesos
+    # Factor de crecimiento en ARS (mismo denominador que el cálculo)
+        factor_ars = monto_final_pesos / monto_inicial
 
-        dolar_break_even = factor_ars * techo     # Dólar break-even = techo * factor_ars
-
+    # Banda se usa solo para proyectar a USD techo
+        dolar_break_even = factor_ars * techo
         monto_final_usd_techo = monto_final_pesos / techo
 
         return {
             "monto_final_usd_techo": round(monto_final_usd_techo, 2),
             "dolar_equilibrio": round(dolar_break_even, 2)
-            }
+        }
 
-# -------------------- Bono -------------------    
-    
+
+# -------------------- Bono -------------------
+
+
 class Bono(FixedIncomeInstrument):
     def __init__(self, nombre: str, moneda: str, ultimo=None,
                  dia_pct=None, mes_pct=None, anio_pct=None):
         super().__init__(nombre, moneda)
         self.ultimo = self._to_float(ultimo)
-        self.dia_pct = self._to_float(dia_pct)    
-        self.mes_pct = self._to_float(mes_pct)    
-        self.anio_pct = self._to_float(anio_pct)   
+        self.dia_pct = self._to_float(dia_pct)
+        self.mes_pct = self._to_float(mes_pct)
+        self.anio_pct = self._to_float(anio_pct)
 
-     # Helpers robustos para convertir a float
-
-    def _to_float(self, value): 
+    # Helpers robustos para convertir a float
+    def _to_float(self, value):
         if value is None:
             return None
         if isinstance(value, (int, float)):
             return float(value)
         if isinstance(value, str):
-            value = value.replace('%', '').replace(',', '.').strip()
+            v = value.replace("%", "").replace(",", ".").strip()
             try:
-                return float(value)
+                return float(v)
             except ValueError:
                 return None
         return None
-    def _estimacion_rend_anual(self):
+
+    def _estimacion_rend_anual(self) -> float:
+        """
+        Estima una TEA a partir de lo disponible:
+        - anio_pct tal cual (ej.: 17% -> 0.17)
+        - mes_pct anualizado: (1 + m)^12 - 1
+        - dia_pct anualizado: (1 + d)^365 - 1
+        Promedia lo que haya.
+        """
         posibles = []
         if self.anio_pct is not None:
-            posibles.append(self.anio_pct / 100)
+            posibles.append(self.anio_pct / 100.0)
         if self.mes_pct is not None:
-            posibles.append((1 + self.mes_pct / 100) ** 12 - 1)
+            posibles.append((1.0 + self.mes_pct / 100.0) ** 12 - 1.0)
         if self.dia_pct is not None:
-            posibles.append((1 + self.dia_pct / 100) ** 365 - 1)
+            posibles.append((1.0 + self.dia_pct / 100.0) ** 365 - 1.0)
         return sum(posibles) / len(posibles) if posibles else 0.0
-    
-    def calcular_rendimiento(self, monto_inicial: float, tipo_cambio_actual: float):
+
+    def calcular_rendimiento(self, monto_inicial: float, tipo_cambio_actual: float = None, dias: int = 30):
+        """
+        Devuelve para la sección 'Rendimiento':
+        - r_mensual_pct: usando 30 días
+        - r_anual_pct: TEA estimada
+        - usd_invertidos (solo si el bono es ARS y hay TC): monto_inicial / tipo_cambio
+        NO devuelve montos finales ni días.
+        """
         r_anual = self._estimacion_rend_anual()
-        r_periodo = (1 + r_anual) ** (30 / 365) - 1
-        monto_final = monto_inicial * (1 + r_periodo)
-        ganancia_pesos = monto_final - monto_inicial
-        ganancia_usd = ganancia_pesos / tipo_cambio_actual if tipo_cambio_actual else None
-        return {
-            "r_anual_pct": round(r_anual * 100, 2),
-            "r_mensual_pct": round(r_periodo * 100, 2),
-            "monto_final_pesos": round(monto_final, 2),
-            "ganancia_pesos": round(ganancia_pesos, 2),
-            "ganancia_usd": round(ganancia_usd, 2) if ganancia_usd else None
+        r_mensual = (1.0 + r_anual) ** (30.0 / 365.0) - 1.0
+
+        resultado = {
+            "r_mensual_pct": round(r_mensual * 100.0, 2),
+            "r_anual_pct": round(r_anual * 100.0, 2),
         }
-    
+
+        # Si el bono es en ARS, exponer cuántos USD se invirtieron
+        if self.moneda == "ARS":
+            tc = tipo_cambio_actual or getattr(self, "valor_dolar", None)
+            if not tc:
+                try:
+                    tc = obtener_dolar_oficial()
+                except Exception:
+                    tc = None
+            if tc:
+                resultado["usd_invertidos"] = round(monto_inicial / float(tc), 2)
+
+        return resultado
+
     def actualizar(self, valor_dolar: float):
         self.valor_dolar = valor_dolar
 
-    def rendimiento_vs_banda(self, monto_inicial: float, fecha: str = None):
-        _, techo = obtener_banda_cambiaria(fecha)
+    def rendimiento_vs_banda(
+        self,
+        monto_inicial: float,
+        mes: str | None = None,
+        dias: int = 30,
+        fecha_inicio: date | None = None
+    ):
+        """
+        Comparación contra banda cambiaria:
+        - Convierte a ARS si el bono está en USD (usa self.valor_dolar o el oficial)
+        - Aplica TEA estimada por 'dias'
+        - Usa el techo del mes de salida (inicio + dias)
+        """
+        dias = int(dias) if dias and dias > 0 else 30
+
+        # 1) Factor ARS para 'dias' a partir de la TEA estimada
+        r_anual = self._estimacion_rend_anual()
+        factor_ars = (1.0 + r_anual) ** (dias / 365.0)
+
+        # 2) Pasar a ARS si el bono está en USD
+        dolar_oficial = getattr(self, "valor_dolar", None) or obtener_dolar_oficial()
+        if self.moneda == "USD" and dolar_oficial:
+            monto_inicial_ars = monto_inicial * float(dolar_oficial)
+        else:
+            monto_inicial_ars = monto_inicial
+
+        monto_final_pesos = monto_inicial_ars * factor_ars
+
+        # 3) Banda del MES FINAL (inicio + dias)
+        mes_salida = _mes_banda_de_salida(mes_inicio=mes, fecha_inicio=fecha_inicio, dias=dias)
+        piso, techo = obtener_banda_cambiaria(mes_salida)
         if not techo or techo <= 0:
-            return None
+            # fallback al último disponible
+            piso, techo = obtener_banda_cambiaria(None)
+            if not techo or techo <= 0:
+                return None
 
-        rend = self.calcular_rendimiento(monto_inicial, techo)
-
-        monto_final_pesos = rend.get("monto_final_pesos", monto_inicial + rend["ganancia_pesos"])
-
-
-        factor_ars = monto_final_pesos / monto_inicial
-        dolar_break_even = factor_ars * techo
-
-
-        monto_final_usd_techo = monto_final_pesos / techo
-
+        # 4) Métricas vs banda
         return {
-            "monto_final_usd_techo": round(monto_final_usd_techo, 2),
-            "dolar_equilibrio": round(dolar_break_even, 2)
-            }
+            "monto_final_pesos": round(monto_final_pesos, 2),
+            "factor_ars": round(factor_ars, 6),
+            "monto_final_usd_techo": round(monto_final_pesos / techo, 2),
+            "dolar_equilibrio": round(factor_ars * techo, 2),
+            "dias_considerados": dias,
+            "mes_banda_usado": mes_salida,
+        }
 
 # -------------------- Letra --------------------
-    
+
+
+# -------------------- Letra --------------------
+from datetime import date, datetime
 
 class Letra(FixedIncomeInstrument):
-    def __init__(self, nombre: str, moneda: str, precio_actual: float,
-                 dias_al_vencimiento: int, valor_nominal: float = 100.0):
+    def __init__(self, nombre: str, moneda: str, ultimo=None, dia_pct=None, mes_pct=None, anio_pct=None, fecha_vencimiento: str | None = None):
         super().__init__(nombre, moneda)
-        if precio_actual is None or precio_actual <= 0:
-            raise ValueError("precio_actual debe ser > 0")
-        if dias_al_vencimiento is None or dias_al_vencimiento <= 0:
-            raise ValueError("dias_al_vencimiento debe ser > 0")
-        self.precio_actual = float(precio_actual)
-        self.dias_al_vencimiento = int(dias_al_vencimiento)
-        self.valor_nominal = float(valor_nominal)
+        self.ultimo = self._to_float(ultimo)
+        self.dia_pct = self._to_float(dia_pct)
+        self.mes_pct = self._to_float(mes_pct)
+        self.anio_pct = self._to_float(anio_pct)
+        self.fecha_vencimiento = fecha_vencimiento
 
-    def calcular_rendimiento(self, monto_inicial: float, tipo_cambio_actual: float, dias: int = None):
-        
-        dias_base = self.dias_al_vencimiento #dias base de la letra
-        dias= dias_base if dias is None else int(dias) #dias para informar un rendiemiento del periodo
-        r_vencimiento = (self.valor_nominal / self.precio_actual) - 1 #rendimiento al vencimiento
-        r_anual = (1 + r_vencimiento) ** (365 / dias_base) - 1 #tea usando dias al vencimiento
-        r_periodo = (1 + r_anual) ** (dias / 365) - 1 #rendimiento para #dias informados (si difieren de dias al vencimiento)
+    # ---- helpers ----
+    def _to_float(self, v):
+        if v is None: return None
+        if isinstance(v, (int, float)): return float(v)
+        if isinstance(v, str):
+            v2 = v.replace("%", "").replace(",", ".").strip()
+            try: return float(v2)
+            except ValueError: return None
+        return None
 
-        monto_final = monto_inicial * (self.valor_nominal / self.precio_actual)
-        ganancia_pesos = monto_final - monto_inicial
-        ganancia_usd = None
-        monto_final_usd = None
-        if tipo_cambio_actual and tipo_cambio_actual > 0:
-            ganancia_usd = ganancia_pesos / tipo_cambio_actual
-            monto_final_usd = monto_final / tipo_cambio_actual
+    def _tea_estimada(self) -> float:
+        """Promedia la info disponible: anio_pct, (1+mes)^12-1, (1+dia)^365-1."""
+        comps = []
+        if self.anio_pct is not None:
+            comps.append(self.anio_pct / 100.0)
+        if self.mes_pct is not None:
+            comps.append((1.0 + self.mes_pct / 100.0) ** 12 - 1.0)
+        if self.dia_pct is not None:
+            comps.append((1.0 + self.dia_pct / 100.0) ** 365 - 1.0)
+        return sum(comps) / len(comps) if comps else 0.0
 
-        return {
-            "dias_considerados": dias,
-            "rend_anual_pct": round(r_anual * 100, 2),
-            "r_periodo_dias_pct": round(r_periodo * 100, 2),
-            "ganancia_pesos": round(ganancia_pesos, 2),
-            "ganancia_usd": round(ganancia_usd, 2) if ganancia_usd else None,
-            "monto_final_pesos": round(monto_final, 2),
-            "monto_final_usd": round(monto_final_usd, 2) if monto_final_usd else None
-        }
-    
-    def actualizar(self, valor_dolar: float):
-        self.valor_dolar = valor_dolar
+    def _dias_hasta_venc(self, fecha_inicio: date | None = None) -> int:
+        fi = fecha_inicio or date.today()
+        if not self.fecha_vencimiento:
+            return 0
+        fv = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d").date()
+        return max((fv - fi).days, 0)
 
-    def rendimiento_vs_banda(self, monto_inicial: float, fecha: str = None):
-        _, techo = obtener_banda_cambiaria(fecha)
-        if not techo or techo <= 0:
-            return None
+    # ---- API pública (solo HTM) ----
+    def calcular_rendimiento(self,monto_inicial: float,tipo_cambio_actual: float | None = None,fecha_inicio: date | None = None):
+        """
+        SOLO hold-to-maturity:
+        - r_mensual_pct (30 días)
+        - r_anual_pct (TEA estimada)
+        - usd_invertidos (si es ARS y hay TC)
+        """
+        r_anual = self._tea_estimada()
+        r_mensual = (1.0 + r_anual) ** (30.0 / 365.0) - 1.0
 
-        rend = self.calcular_rendimiento(monto_inicial, techo)
-
-        monto_final_pesos = rend.get("monto_final_pesos", monto_inicial + rend["ganancia_pesos"])
-
-        factor_ars = monto_final_pesos / monto_inicial
-
-        dolar_break_even = factor_ars * techo
-
-        monto_final_usd_techo = monto_final_pesos / techo
-
-        return {
-            "monto_final_usd_techo": round(monto_final_usd_techo, 2),
-            "dolar_equilibrio": round(dolar_break_even, 2)
+        out = {
+            "r_mensual_pct": round(r_mensual * 100.0, 2),
+            "r_anual_pct": round(r_anual * 100.0, 2),
         }
 
-    # -------------------- billetera virtual --------------------
+        if self.moneda == "ARS":
+            tc = tipo_cambio_actual or getattr(self, "valor_dolar", None) or obtener_dolar_oficial()
+            if tc:
+                out["usd_invertidos"] = round(monto_inicial / float(tc), 2)
 
-
-class Billeteravirtual(FixedIncomeInstrument):
-  
-    #Podés pasar TNA (%) o TEA (%) — si viene TNA, convertimos a TEA asumiendo capitalización diaria.
-
-    def __init__(self, nombre: str, moneda: str, tna: float = None, tea: float = None, dias_default: int = 30):
-        super().__init__(nombre, moneda)
-        if tna is None and tea is None:
-            raise ValueError("Debes indicar tna o tea para la billetera.")
-        self.tna = float(tna) if tna is not None else None      # % nominal anual
-        self.tea = float(tea) if tea is not None else None      # % efectiva anual
-        self.dias_default = int(dias_default)
-
-    def _tea(self) -> float:
-        """Devuelve TEA (en proporción, no %) a partir de TEA directa o TNA con capitalización diaria."""
-        if self.tea is not None:
-            return self.tea / 100.0
-        # si solo viene TNA, aproximamos TEA con comp. diaria
-        tna_prop = self.tna / 100.0
-        return (1 + tna_prop / 365.0) ** 365.0 - 1.0
-
-    def calcular_rendimiento(self, monto_inicial: float, tipo_cambio_actual: float, dias: int = None):
-        dias = self.dias_default if dias is None else int(dias)
-        tea_prop = self._tea()
-        r_periodo = (1 + tea_prop) ** (dias / 365.0) - 1.0
-
-        monto_final = monto_inicial * (1 + r_periodo)
-        ganancia_pesos = monto_final - monto_inicial
-
-        ganancia_usd = None
-        monto_final_usd = None
-        if tipo_cambio_actual and tipo_cambio_actual > 0:
-            ganancia_usd = ganancia_pesos / tipo_cambio_actual
-            monto_final_usd = monto_final / tipo_cambio_actual
-
-        return {
-            "tna": round(self.tna, 2) if self.tna is not None else None,
-            "tea": round(tea_prop * 100, 2),
-            "r_periodo_dias_pct": round(r_periodo * 100, 2),
-            "monto_final_pesos": round(monto_final, 2),
-            "ganancia_pesos": round(ganancia_pesos, 2),
-            "ganancia_usd": round(ganancia_usd, 2) if ganancia_usd is not None else None,
-            "monto_final_usd": round(monto_final_usd, 2) if monto_final_usd is not None else None,
-        }
+        return out
 
     def actualizar(self, valor_dolar: float):
         self.valor_dolar = valor_dolar
 
-    def rendimiento_vs_banda(self, monto_inicial: float, fecha: str = None, dias: int = None):
-        _, techo = obtener_banda_cambiaria(fecha)
-        if not techo or techo <= 0:
+    def rendimiento_vs_banda(self,monto_inicial: float,fecha_inicio: date | None = None):
+        """
+        SOLO hold-to-maturity:
+        - Usa días hasta vencimiento
+        - Banda del mes del vencimiento
+        Devuelve:
+        - monto_final_pesos
+        - monto_final_usd_techo
+        - dolar_equilibrio
+        - fecha_vencimiento
+        """
+        # 1) Días hasta vencimiento y factor ARS
+        dias = self._dias_hasta_venc(fecha_inicio)
+        r_anual = self._tea_estimada()
+        factor_ars = (1.0 + r_anual) ** (dias / 365.0)
+
+        # 2) Convertir a ARS si está en USD
+        dolar = getattr(self, "valor_dolar", None) or obtener_dolar_oficial()
+        monto_inicial_ars = monto_inicial * (float(dolar) if self.moneda == "USD" and dolar else 1.0)
+        monto_final_pesos = monto_inicial_ars * factor_ars
+
+        # 3) Banda del mes del vencimiento
+        if not self.fecha_vencimiento:
             return None
-
-        rend = self.calcular_rendimiento(monto_inicial, techo, dias=dias)
-        monto_final_pesos = rend.get("monto_final_pesos", monto_inicial + rend["ganancia_pesos"])
-        factor_ars = monto_final_pesos / monto_inicial
-        dolar_break_even = factor_ars * techo
-        monto_final_usd_techo = monto_final_pesos / techo
-
-        return {
-            "monto_final_usd_techo": round(monto_final_usd_techo, 2),
-            "dolar_break_even": round(dolar_break_even, 2)
-        }
-    
-
-
-class BilleteraMP(FixedIncomeInstrument):
-    # Billetera virtual (Mercado Pago).
-    # Podés pasar TNA (%) o TEA (%) — si viene TNA, convertimos a TEA asumiendo capitalización diaria.
-    def __init__(self, nombre: str, moneda: str, tna: float = None, tea: float = None, dias_default: int = 30):
-        super().__init__(nombre, moneda)
-        if tna is None and tea is None:
-            raise ValueError("Debes indicar tna o tea para la billetera.")
-        self.tna = float(tna) if tna is not None else None
-        self.tea = float(tea) if tea is not None else None
-        self.dias_default = int(dias_default)
-
-    def _tea(self) -> float:
-        # Devuelve TEA (en proporción)
-        if self.tea is not None:
-            return self.tea / 100.0
-        tna_prop = self.tna / 100.0
-        return (1 + tna_prop / 365.0) ** 365.0 - 1.0
-
-    def calcular_rendimiento(self, monto_inicial: float, tipo_cambio_actual: float, dias: int = None):
-        dias = self.dias_default if dias is None else int(dias)
-        tea_prop = self._tea()
-        r_periodo = (1 + tea_prop) ** (dias / 365.0) - 1.0
-
-        monto_final = monto_inicial * (1 + r_periodo)
-        ganancia_pesos = monto_final - monto_inicial
-
-        ganancia_usd = None
-        monto_final_usd = None
-        if tipo_cambio_actual and tipo_cambio_actual > 0:
-            ganancia_usd = ganancia_pesos / tipo_cambio_actual
-            monto_final_usd = monto_final / tipo_cambio_actual
-
-        return {
-            "tna": round(self.tna, 2) if self.tna is not None else None,
-            "tea": round(tea_prop * 100, 2),
-            "r_anual_pct": round(tea_prop * 100, 2),         # alias para uniformidad con otros instrumentos
-            "r_periodo_dias_pct": round(r_periodo * 100, 2),
-            "monto_final_pesos": round(monto_final, 2),
-            "ganancia_pesos": round(ganancia_pesos, 2),
-            "ganancia_usd": round(ganancia_usd, 2) if ganancia_usd is not None else None,
-            "monto_final_usd": round(monto_final_usd, 2) if monto_final_usd is not None else None,
-        }
-
-    def actualizar(self, valor_dolar: float):
-        self.valor_dolar = valor_dolar
-
-    def rendimiento_vs_banda(self, monto_inicial: float, fecha: str = None, dias: int = None):
-        _, techo = obtener_banda_cambiaria(fecha)
+        fv = datetime.strptime(self.fecha_vencimiento, "%Y-%m-%d").date()
+        mes_banda = fv.strftime("%Y-%m")
+        piso, techo = obtener_banda_cambiaria(mes_banda)
         if not techo or techo <= 0:
-            return None
-
-        rend = self.calcular_rendimiento(monto_inicial, techo, dias=dias)
-        monto_final_pesos = rend.get("monto_final_pesos", monto_inicial + rend["ganancia_pesos"])
-        factor_ars = monto_final_pesos / monto_inicial
-        dolar_break_even = factor_ars * techo
-        monto_final_usd_techo = monto_final_pesos / techo
+            piso, techo = obtener_banda_cambiaria(None)
+            if not techo or techo <= 0:
+                return None
 
         return {
-            "monto_final_usd_techo": round(monto_final_usd_techo, 2),
-            "dolar_equilibrio": round(dolar_break_even, 2)   # unificado con otros instrumentos
+            "monto_final_pesos": round(monto_final_pesos, 2),
+            "monto_final_usd_techo": round(monto_final_pesos / techo, 2),
+            "dolar_equilibrio": round(factor_ars * techo, 2),
+            "fecha_vencimiento": self.fecha_vencimiento,
         }
-
-    
