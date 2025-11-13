@@ -1,12 +1,10 @@
 # API Cotizar
-
 Este proyecto es una API desarrollada en **FastAPI** para obtener y procesar información financiera: bandas cambiarias, instrumentos financieros como los bonos, letras y plazos fijos, entre otros. Permite la creación de usuarios e incluye alertas personalizadas.
 Está diseñada para ejecutarse localmente y también se puede desplegar en **Render** utilizando Docker.
 
 ---
 
 ## Contenido
-
 1. [Requisitos](#requisitos)  
 2. [Entorno Virtual](#entorno-virtual)  
 3. [Instalación de Dependencias](#instalación-de-dependencias)  
@@ -20,7 +18,6 @@ Está diseñada para ejecutarse localmente y también se puede desplegar en **Re
 ---
 
 ## Requisitos
-
 - Python 3.11 o 3.13  
 - Docker (opcional, para despliegue en contenedor)  
 - Git (para clonar el repositorio)  
@@ -79,13 +76,6 @@ Proyecto/
 │   ├── auth_api.py
 │   ├── auth_service.py
 │   └── __init__.py
-├── codigo_local/
-│   ├── scrap_bandas_cambiarias_db_local.py
-│   ├── scrap_bono_db_local.py
-│   ├── scrap_dolar_db_local.py
-│   ├── scrap_letras_db_local.py
-│   ├── scrap_plazos_fijos_db_local.py
-│   └── users_db_local.py
 ├── datasets/
 │   ├── bandas_nov2025_dic2028.csv
 │   ├── bonos_argentinos_vencimiento.csv
