@@ -96,14 +96,18 @@ def iniciar_sesion(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 # -------------------------------
-# RUTA PROTEGIDA (PERFIL)
+# USUARIO ACTUAL (PROTEGIDO)
 # -------------------------------
 
-@router.get("/yo", response_model=UsuarioPublico, summary="Perfil usuario")
-async def obtener_perfil(usuario_actual: UsuarioPublico = Depends(
+@router.get(
+    "/usuario_actual",
+    response_model=UsuarioPublico,
+    summary="Perfil usuario autenticado"
+)
+def obtener_usuario(usuario_actual: UsuarioPublico = Depends(
     obtener_usuario_actual
 )):
-    """Devuelve los datos del usuario autenticado."""
+    """Devuelve los datos públicos del usuario autenticado."""
     return usuario_actual
 
 
@@ -125,22 +129,6 @@ def cerrar_sesion(usuario_actual: UsuarioPublico = Depends(
             detail="No había sesión activa para este usuario."
         )
     return {"mensaje": "Sesión cerrada correctamente."}
-
-
-# -------------------------------
-# USUARIO ACTUAL (PROTEGIDO)
-# -------------------------------
-
-@router.get(
-    "/usuario_actual",
-    response_model=UsuarioPublico,
-    summary="Datos usuario autenticado"
-)
-def obtener_usuario(usuario_actual: UsuarioPublico = Depends(
-    obtener_usuario_actual
-)):
-    """Devuelve los datos públicos del usuario autenticado."""
-    return usuario_actual
 
 
 # -------------------------------
