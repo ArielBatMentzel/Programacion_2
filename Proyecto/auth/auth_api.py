@@ -9,10 +9,10 @@ from auth.auth_service import (
     obtener_usuario_actual
 )
 from models.user import UsuarioCrear, UsuarioPublico
-from db.usuarios.users_db import DataBaseUsuario, RUTA_DB
+from db.usuarios.users_db import DataBaseUsuario
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
-db_usuarios = DataBaseUsuario(str(RUTA_DB))
+db_usuarios = DataBaseUsuario()
 
 
 # -------------------------------
