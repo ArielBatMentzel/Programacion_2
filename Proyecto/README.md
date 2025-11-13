@@ -53,7 +53,7 @@ deactivate
 ---
 
 ## Instalación de Dependencias
-Instalar todas las librerías necesarias desde el archivo requirements.txt:
+Instalar todas las librerías necesarias desde el archivo `requirements.txt`:
 ```bash
 pip install -r requirements.txt
 ```
@@ -136,22 +136,22 @@ Proyecto/
 Algunas librerías clave y su propósito:
 
 Librería	Versión	Uso principal
-fastapi	0.121.1	Framework principal para crear la API
-uvicorn	0.23.1	Servidor ASGI para ejecutar FastAPI
-SQLAlchemy	2.0.31	ORM para interactuar con la base de datos
-psycopg2-binary	2.9.9	Driver PostgreSQL para SQLAlchemy
-pydantic	2.7.0	Validación y serialización de datos
-requests	2.32.3	Consumo de APIs externas
-beautifulsoup4	4.12.3	Web scraping de HTML
-selenium	4.38.0	Automatización de navegador para scraping dinámico
-webdriver-manager	4.0.1	Manejo automático de drivers para Selenium
-schedule	1.2.1	Tareas programadas dentro de la API
-pandas	2.2.2	Manejo de datos en tablas y CSV
-numpy	1.24.3	Operaciones matemáticas y arrays
-matplotlib	3.9.2	Visualización de datos
-python-dotenv	1.0.0	Manejo de variables de entorno
-pytest	8.3.2	Pruebas unitarias
-loguru	0.7.0	Logging y registro de eventos
+`fastapi`	0.121.1	Framework principal para crear la API
+`uvicorn`	0.23.1	Servidor ASGI para ejecutar FastAPI
+`SQLAlchemy`	2.0.31	ORM para interactuar con la base de datos
+`psycopg2-binary`	2.9.9	Driver PostgreSQL para SQLAlchemy
+`pydantic`	2.7.0	Validación y serialización de datos
+`requests`	2.32.3	Consumo de APIs externas
+`beautifulsoup4`	4.12.3	Web scraping de HTML
+`selenium`	4.38.0	Automatización de navegador para scraping dinámico
+`webdriver-manager`	4.0.1	Manejo automático de drivers para Selenium
+`schedule`	1.2.1	Tareas programadas dentro de la API
+`pandas`	2.2.2	Manejo de datos en tablas y CSV
+`numpy`	1.24.3	Operaciones matemáticas y arrays
+`matplotlib`	3.9.2	Visualización de datos
+`python-dotenv`	1.0.0	Manejo de variables de entorno
+`pytest`	8.3.2	Pruebas unitarias
+`loguru`	0.7.0	Logging y registro de eventos
 
 > Nota: El archivo completo requirements.txt incluye todas las librerías necesarias para ejecutar la API.
 
@@ -166,12 +166,12 @@ loguru	0.7.0	Logging y registro de eventos
 ```bash
 uvicorn main:cotizar --reload
 ```
-- Acceder a la documentación interactiva: http://127.0.0.1:8000/docs
+- Acceder a la documentación interactiva: `http://127.0.0.1:8000/docs`
 
 ---
 
 ## Pruebas Unitarias
-Ejecutar todas las pruebas con pytest:
+Ejecutar todas las pruebas con `pytest`:
 ```bash
 pytest tests/
 ```
@@ -181,9 +181,12 @@ pytest tests/
 ## Despliegue con Docker y Render
 
 -La aplicación se desplegó en Render utilizando Docker como lenguaje.  
--Se configuró el directorio raíz como Proyecto.  
+
+-Se configuró el directorio raíz como `Proyecto`.  
+
 -Render utiliza el Dockerfile incluido en el proyecto, por lo que no es necesario configurar build o start commands manualmente.  
--Variable de entorno DB_URL configurada en Render para conexión con Supabase (contiene usuario, contraseña y URL de la base de datos).  
+
+-Variable de entorno `DB_URL` configurada en Render para conexión con Supabase (contiene usuario, contraseña y URL de la base de datos).  
 
 ### Ejecutar Docker localmente (opcional)
 ### 1. Construir la imagen Docker:
@@ -194,7 +197,7 @@ docker build -t cotizar-api:latest .
 ```bash
 docker run -p 8000:8000 cotizar-api:latest
 ```
-- Acceder a la API en http://localhost:8000
+- Acceder a la API en `http://localhost:8000`
 ### 3. Ejecutar en segundo plano (detached):
 ```bash
 docker run -d -p 8000:8000 cotizar-api:latest
@@ -213,7 +216,7 @@ docker stop $(docker ps -q)
 ## Notas
 -Se recomienda usar Python 3.11 para compatibilidad con todas las librerías.
 
--Variables sensibles se manejan con .env localmente y DB_URL en Render.
+-Variables sensibles se manejan con `.env` localmente y `DB_URL` en Render.
 
 -La API integra datos de Supabase (PostgreSQL), scraping web y notificaciones de alertas.
 
