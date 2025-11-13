@@ -160,6 +160,10 @@ Algunas librerías clave y su propósito:
 ---
 
 ## Ejecución Local
+### 1. Pararse dentro de la carpeta Proyecto del repositorio
+```bash
+cd Proyecto
+```
 ### 1. Activar el entorno virtual:
 ```bash
 .\venv\Scripts\activate
@@ -191,20 +195,24 @@ pytest tests/
 -Variable de entorno `DB_URL` configurada en Render para conexión con Supabase (contiene usuario, contraseña y URL de la base de datos).  
 
 ### Ejecutar Docker localmente (opcional)
-### 1. Construir la imagen Docker:
+### 1. Descargamos Docker Desktop, que incluye el motor Docker (para ejecutar `docker build` y `docker run`) y una interfaz para probar nuestras imagenes y contenedores e manera local
+```bash
+[Docker Desktop](https://www.docker.com/products/docker-desktop/)
+```
+### 2. Construir la imagen Docker:
 ```bash
 docker build -t cotizar-api:latest .
 ```
-### 2. Ejecutar el contenedor:
+### 3. Ejecutar el contenedor:
 ```bash
 docker run -p 8000:8000 cotizar-api:latest
 ```
 - Acceder a la API en `http://localhost:8000`
-### 3. Ejecutar en segundo plano (detached):
+### 4. Ejecutar en segundo plano (detached):
 ```bash
 docker run -d -p 8000:8000 cotizar-api:latest
 ```
-### 4. etener contenedores:
+### 5. Detener contenedores:
 ```bash
 docker stop <nombre_o_id_del_contenedor>
 ```
