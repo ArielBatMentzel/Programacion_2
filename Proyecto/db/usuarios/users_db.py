@@ -1,19 +1,7 @@
 # archivo: db/usuarios/users_db.py
-
 from typing import Optional, List
 from models.user import User, Session
 from db.abstract_db import AbstractDatabase
-import sqlite3
-
-
-
-
-
-"""
-Cambios a Supabase
-"""
-
-
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 from dotenv import load_dotenv
