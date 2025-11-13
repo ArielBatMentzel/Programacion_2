@@ -65,7 +65,7 @@ pip freeze > requirements.txt
 ---
 
 ## Estructura del Proyecto
-text
+```text
 Proyecto/
 │
 ├── .dockerignore
@@ -129,29 +129,31 @@ Proyecto/
     ├── obtener_ultimo_valor_dolar.py
     ├── scrapper.py
     └── __init__.py
+```
 
 ---
 
 ## Librerías Utilizadas
 Algunas librerías clave y su propósito:
 
-Librería	Versión	Uso principal
-`fastapi`	0.121.1	Framework principal para crear la API
-`uvicorn`	0.23.1	Servidor ASGI para ejecutar FastAPI
-`SQLAlchemy`	2.0.31	ORM para interactuar con la base de datos
-`psycopg2-binary`	2.9.9	Driver PostgreSQL para SQLAlchemy
-`pydantic`	2.7.0	Validación y serialización de datos
-`requests`	2.32.3	Consumo de APIs externas
-`beautifulsoup4`	4.12.3	Web scraping de HTML
-`selenium`	4.38.0	Automatización de navegador para scraping dinámico
-`webdriver-manager`	4.0.1	Manejo automático de drivers para Selenium
-`schedule`	1.2.1	Tareas programadas dentro de la API
-`pandas`	2.2.2	Manejo de datos en tablas y CSV
-`numpy`	1.24.3	Operaciones matemáticas y arrays
-`matplotlib`	3.9.2	Visualización de datos
-`python-dotenv`	1.0.0	Manejo de variables de entorno
-`pytest`	8.3.2	Pruebas unitarias
-`loguru`	0.7.0	Logging y registro de eventos
+| Librería | Versión | Uso principal |
+|-----------|----------|-----------------------------|
+| `fastapi` | 0.121.1 | Framework principal para crear la API |
+| `uvicorn` | 0.23.1 | Servidor ASGI para ejecutar FastAPI |
+| `SQLAlchemy` | 2.0.31 | ORM para interactuar con la base de datos |
+| `psycopg2-binary` | 2.9.9 | Driver PostgreSQL para SQLAlchemy |
+| `pydantic` | 2.7.0 | Validación y serialización de datos |
+| `requests` | 2.32.3 | Consumo de APIs externas |
+| `beautifulsoup4` | 4.12.3 | Web scraping de HTML |
+| `selenium` | 4.38.0 | Automatización de navegador para scraping dinámico |
+| `webdriver-manager` | 4.0.1 | Manejo automático de drivers para Selenium |
+| `schedule` | 1.2.1 | Tareas programadas dentro de la API |
+| `pandas` | 2.2.2 | Manejo de datos en tablas y CSV |
+| `numpy` | 1.24.3 | Operaciones matemáticas y arrays |
+| `matplotlib` | 3.9.2 | Visualización de datos |
+| `python-dotenv` | 1.0.0 | Manejo de variables de entorno |
+| `pytest` | 8.3.2 | Pruebas unitarias |
+| `loguru` | 0.7.0 | Logging y registro de eventos |
 
 > Nota: El archivo completo requirements.txt incluye todas las librerías necesarias para ejecutar la API.
 
