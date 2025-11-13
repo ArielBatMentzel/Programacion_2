@@ -22,11 +22,32 @@ if not DB_URL:
 engine = create_engine(DB_URL)
 
 # CONFIGURAR SELENIUM 
+
 options = Options()
-options.add_argument("--headless=new")
-options.add_argument("--disable-gpu")
+options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
+
+# Intentamos primero con el driver del sistema (Render)
+try:
+    driver = webdriver.Chrome(service=Service("/usr/bin/chromedriver"), options=options)
+    print("Usando ChromeDriver del sistema (/usr/bin/chromedriver)")
+
+# Si falla, usamos webdriver_manager (para entorno local)
+except WebDriverException:
+    print("Error con ChromeDriver del sistema, intentando con webdriver_manager...")
+    try:
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        print("ChromeDriverManager instalado correctamente")
+    except WebDriverException as e:
+        print("Error con ChromeDriverManager, limpiando caché y reintentando...")
+        shutil.rmtree(os.path.expanduser("~/.wdm"), ignore_errors=True)
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        print("ChromeDriverManager reinstalado correctamente")
+
+
+
+driver = webdriver.Chrome(service=Service("/usr/bin/chromedriver"), options=options)
 
 # Abrir navegador (se autorepara si ChromeDriver falla)
 try:
