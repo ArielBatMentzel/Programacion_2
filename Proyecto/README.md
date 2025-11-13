@@ -14,7 +14,7 @@ Está diseñada para ejecutarse localmente con Python y también se puede desple
 5. [Librerías Utilizadas](#librerías-utilizadas)  
 6. [Ejecución Local](#ejecución-local)  
 7. [Pruebas Unitarias](#pruebas-unitarias)  
-8. [Ejecución con docker (local)](#Ejecución-con-docker-(local))  
+8. [Ejecución con docker (local)](#Ejecución-con-docker-(-local-))  
 9. [Despliegue en Render](#Despliegue-en-Render)
 
 ---
