@@ -169,7 +169,7 @@ Algunas librerías clave y su propósito:
 uvicorn main:cotizar --reload
 ```
 - Acceder a la documentación interactiva: `http://127.0.0.1:8000/docs`
-
+- Para detener el servidor apretar `ctrl + c` en la terminal.
 ---
 
 ## Pruebas Unitarias
