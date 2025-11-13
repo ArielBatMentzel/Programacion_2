@@ -254,17 +254,25 @@ Para evitar conflictos de librerías, se recomienda crear y activar un entorno v
 ### 0. Crear entorno virtual (solo la primera vez)
 ```bash
 python -m venv venv
+
+
+
+
+
+
+
+
+
+
+
 1. Activar entorno virtual
-Windows:
-
-bash
-Copiar código
+- **Windows:**
+```bash
 .\venv\Scripts\activate
-Linux / MacOS:
-
-bash
-Copiar código
+- **Linux / MacOS:**
+```bash
 source venv/bin/activate
+
 2. Desactivar entorno virtual (opcional)
 bash
 Copiar código
