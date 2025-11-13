@@ -21,7 +21,7 @@ def obtener_ultimo_valor_dolar(tipo: str = "DÓLAR BLUE") -> float:
         ValueError: Si no se encuentra el tipo en la base de datos.
     """
     # Ejecutar scraping antes (actualiza la tabla si corresponde)
-    scrap(["dolar"])
+    # scrap(["dolar"])
 
     with engine.connect() as conn:
         result = conn.execute(
@@ -49,7 +49,6 @@ def obtener_dolar_oficial() -> float | None:
     Returns:
         float | None: Valor del dólar oficial o None si hay error.
     """
-    scrap(["dolar"])
     try:
         return obtener_ultimo_valor_dolar("DÓLAR OFICIAL")
     except Exception as e:
