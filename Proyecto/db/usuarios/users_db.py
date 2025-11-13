@@ -4,10 +4,28 @@ from typing import Optional, List
 from models.user import User, Session
 from db.abstract_db import AbstractDatabase
 import sqlite3
-from pathlib import Path
 
-# Ruta hacia la base de datos
-RUTA_DB = Path(__file__).resolve().parent.parent / "usuarios" / "usuarios.db"
+
+
+
+
+"""
+Cambios a Supabase
+"""
+
+
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import IntegrityError
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv()
+DB_URL = os.getenv("DB_URL")
+if not DB_URL:
+    raise ValueError("⚠️ No se encontró la variable DB_URL en el entorno.")
+engine = create_engine(DB_URL)
+
 
 class DataBaseUsuario(AbstractDatabase):
     """
@@ -15,40 +33,33 @@ class DataBaseUsuario(AbstractDatabase):
     Hereda de AbstractDatabase y cumple la interfaz común.
     """
 
-    def __init__(self, conexion: str):
-        self.conexion = conexion
+    def __init__(self):
+        self.engine = engine
         self._crear_tablas()
-
     
     def _crear_tablas(self):
-        """Crea las tablas, si no existen."""
+        """Crea las tablas, si no existen en Supabase"""
        
-        with sqlite3.connect(self.conexion) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS usuarios (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+        with self.engine.begin() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS usuarios.usuarios (
+                    id SERIAL PRIMARY KEY,
                     username TEXT UNIQUE,
                     hashed_password TEXT,
                     full_name TEXT,
                     tipo TEXT,
                     email TEXT UNIQUE,
-                    telefono INTEGER
+                    telefono BIGINT
                 )
-            """)
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS sesiones (
+            """))
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS usuarios.sesiones (
                     token TEXT PRIMARY KEY,
-                    usuario_id INTEGER,
+                    usuario_id INTEGER REFERENCES usuarios(id),
                     fecha_inicio TEXT,
-                    fecha_expiracion TEXT,
-                    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+                    fecha_expiracion TEXT
                 )
-            """)
-            conn.commit()
-
-
-
+            """))
 
 
     # ========================================================
@@ -64,47 +75,38 @@ class DataBaseUsuario(AbstractDatabase):
                       email: Optional[str] = None, 
                       telefono: Optional[int] = None):
         """Inserta un nuevo usuario compatible con el sistema JWT."""
-        
-        with sqlite3.connect(self.conexion) as conn:
-            
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO usuarios (username, hashed_password, full_name, tipo, email, telefono)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (nombre_usuario, contraseña_hash, nombre_completo, tipo, email, telefono))
-            conn.commit()
+        with self.engine.begin() as conn:
+            conn.execute(text("""
+                INSERT INTO usuarios.usuarios (username, hashed_password, full_name, tipo, email, telefono)
+                VALUES (:username, :hashed_password, :full_name, :tipo, :email, :telefono)
+            """), {
+                "username": nombre_usuario,
+                "hashed_password": contraseña_hash,
+                "full_name": nombre_completo,
+                "tipo": tipo,
+                "email": email,
+                "telefono": telefono
+            })
 
 
     def buscar_usuario_por_nombre(self, nombre_usuario: str):
         """Busca un usuario por su nombre de usuario y devuelve un diccionario."""
         
-        with sqlite3.connect(self.conexion) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
+        with self.engine.begin() as conn:
+            fila = conn.execute(text("""
                 SELECT username, hashed_password, full_name, tipo, email, telefono
-                FROM usuarios
-                WHERE username = ?
-            """, (nombre_usuario,))
-            fila = cursor.fetchone()
-            if fila:
-                return {
-                    "username": fila[0],
-                    "hashed_password": fila[1],
-                    "full_name": fila[2],
-                    "tipo": fila[3],
-                    "email": fila[4],
-                    "telefono": fila[5]
-                }
-            return None
+                FROM usuarios.usuarios WHERE username = :username
+            """), {"username": nombre_usuario}).mappings().first()
+            return dict(fila) if fila else None
+
 
     def obtener_id_usuario(self, username: str) -> Optional[int]:
         """
         Devuelve el ID del usuario según su nombre.
         """
-        with sqlite3.connect(self.conexion) as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id FROM usuarios WHERE username = ?", (username,))
-            fila = cursor.fetchone()
+        with self.engine.begin() as conn:
+            fila = conn.execute(text("SELECT id FROM usuarios.usuarios WHERE username = :username"),
+                                {"username": username}).first()
             return fila[0] if fila else None
 
     # ==============================
@@ -115,49 +117,45 @@ class DataBaseUsuario(AbstractDatabase):
 
     def guardar(self, usuario: User):
         """Guarda un usuario nuevo desde modelo User."""
-        
-        with sqlite3.connect(self.conexion) as conn:
-            cursor = conn.cursor()
-            try:
-                cursor.execute("""
-                    INSERT INTO usuarios (username, hashed_password, full_name, tipo, email, telefono)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (usuario.nombre, usuario.contraseña, usuario.nombre, usuario.tipo, usuario.email, usuario.telefono))
-                conn.commit()
-                return True
-            except sqlite3.IntegrityError:
-                return False
+        try:
+            with self.engine.begin() as conn:
+                conn.execute(text("""
+                    INSERT INTO usuarios.usuarios (username, hashed_password, full_name, tipo, email, telefono)
+                    VALUES (:username, :hashed_password, :full_name, :tipo, :email, :telefono)
+                """), {
+                    "username": usuario.nombre,
+                    "hashed_password": usuario.contraseña,
+                    "full_name": usuario.nombre,
+                    "tipo": usuario.tipo,
+                    "email": usuario.email,
+                    "telefono": usuario.telefono
+                })
+            return True
+        except IntegrityError:
+            return False
+
 
     def eliminar(self, id: int) -> bool:
-        """Elimina un usuario y sus sesiones."""
-        with sqlite3.connect(self.conexion) as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM sesiones WHERE usuario_id = ?", (id,))
-            cursor.execute("DELETE FROM usuarios WHERE id = ?", (id,))
-            conn.commit()
+        """Elimina un usuario y sus sesiones en base a su id."""
+        with self.engine.begin() as conn:
+            conn.execute(text("DELETE FROM usuarios.sesiones WHERE usuario_id = :id"), {"id": id})
+            conn.execute(text("DELETE FROM usuarios.usuarios WHERE id = :id"), {"id": id})
         return True
 
     
     def consultar(self, campo: Optional[str] = None, valor: Optional[str] = None) -> List[User]:
         """Devuelve los usuarios, opcionalmente filtrados."""
         usuarios_encontrados = []
-        with sqlite3.connect(self.conexion) as conn:
-            cursor = conn.cursor()
+        with self.engine.begin() as conn:
             if campo and valor:
                 if campo not in {"id", "username", "full_name", "tipo", "email", "telefono"}:
                     raise ValueError(f"Campo no válido: {campo}")
-                consulta = f"SELECT id, username, full_name, tipo, email, telefono FROM usuarios WHERE {campo} = ?"
-                cursor.execute(consulta, (valor,))
+                consulta = text(f"SELECT id, username, full_name, tipo, email, telefono FROM usuarios.usuarios WHERE {campo} = :valor")
+                filas = conn.execute(consulta, {"valor": valor}).mappings().all()
             else:
-                cursor.execute("SELECT id, username, full_name, tipo, email, telefono FROM usuarios")
-            filas = cursor.fetchall()
-            for fila in filas:
-                usuario = User(
-                    email=fila[4],
-                    nombre=fila[2],
-                    tipo=fila[3]
-                )
-                usuarios_encontrados.append(usuario)
+                filas = conn.execute(text("SELECT id, username, full_name, tipo, email, telefono FROM usuarios.usuarios")).mappings().all()
+        for fila in filas:
+            usuarios_encontrados.append(User(email=fila["email"], nombre=fila["full_name"], tipo=fila["tipo"]))
         return usuarios_encontrados
     
 
@@ -176,16 +174,12 @@ class DataBaseUsuario(AbstractDatabase):
         :return: True si se actualizó correctamente
         """
         campos_validos = {"username", "hashed_password", "full_name", "tipo", "email", "telefono"}
-
         if campo not in campos_validos:
             raise ValueError(f"Campo '{campo}' no válido para actualización")
-
-        with sqlite3.connect(self.conexion) as conn:
-            cursor = conn.cursor()
-            consulta = f"UPDATE usuarios SET {campo} = ? WHERE id = ?"
-            cursor.execute(consulta, (valor, id_usuario))
-            conn.commit()
-            return cursor.rowcount > 0
+        with self.engine.begin() as conn:
+            res = conn.execute(text(f"UPDATE usuarios.usuarios SET {campo} = :valor WHERE id = :id"),
+                            {"valor": valor, "id": id_usuario})
+            return res.rowcount > 0
         
 
 
@@ -206,68 +200,73 @@ class DataBaseUsuario(AbstractDatabase):
             campos_actualizados += 1
 
         return campos_actualizados > 0
-    
-
 
 
     # ==============================
     # MÉTODOS DE SESIONES
     # ==============================
 
-
-
+        
     def guardar_sesion(self, sesion: Session) -> bool:
         """Guarda una sesión activa."""
-        
         try:
-            with sqlite3.connect(self.conexion) as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    INSERT INTO sesiones (token, usuario_id, fecha_inicio, fecha_expiracion)
-                    VALUES (?, ?, ?, ?)
-                """, (sesion.token, sesion.usuario_id, sesion.fecha_inicio, sesion.fecha_expiracion))
-                conn.commit()
+            with self.engine.begin() as conn:
+                conn.execute(
+                    text("""
+                        INSERT INTO usuarios.sesiones (token, usuario_id, fecha_inicio, fecha_expiracion)
+                        VALUES (:token, :usuario_id, :fecha_inicio, :fecha_expiracion)
+                    """),
+                    {
+                        "token": sesion.token,
+                        "usuario_id": sesion.usuario_id,
+                        "fecha_inicio": str(sesion.fecha_inicio),
+                        "fecha_expiracion": str(sesion.fecha_expiracion)
+                    }
+                )
             return True
-        except sqlite3.IntegrityError as e:
-            print(f"Error al guardar sesión: {e}")
+        except Exception as e:
+            print(f"⚠️ Error al guardar sesión: {e}")
             return False
 
 
     def consultar_sesion(self, token: str) -> Optional[Session]:
         """Devuelve la sesión correspondiente al token."""
-        with sqlite3.connect(self.conexion) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                SELECT token, usuario_id, fecha_inicio, fecha_expiracion
-                FROM sesiones WHERE token = ?
-            """, (token,))
-            fila = cursor.fetchone()
-            if fila:
+        with self.engine.connect() as conn:
+            res = conn.execute(
+                text("""
+                    SELECT token, usuario_id, fecha_inicio, fecha_expiracion
+                    FROM usuarios.sesiones
+                    WHERE token = :token
+                """),
+                {"token": token}
+            ).fetchone()
+            if res:
                 return Session(
-                    token=fila[0],
-                    usuario_id=fila[1],
-                    fecha_inicio=fila[2],
-                    fecha_expiracion=fila[3]
+                    token=res[0],
+                    usuario_id=res[1],
+                    fecha_inicio=res[2],
+                    fecha_expiracion=res[3]
                 )
             return None
 
 
     def eliminar_sesion(self, token: str) -> bool:
         """Elimina una sesión activa por su token."""
-        
-        with sqlite3.connect(self.conexion) as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM sesiones WHERE token = ?", (token,))
-            conn.commit()
-            return cursor.rowcount > 0
+        with self.engine.begin() as conn:
+            res = conn.execute(
+                text("DELETE FROM usuarios.sesiones WHERE token = :token"),
+                {"token": token}
+            )
+            return res.rowcount > 0
         
     def eliminar_sesion_por_usuario(self, nombre_usuario: str) -> bool:
         """Elimina la sesión activa de un usuario dado su nombre de usuario."""
         usuario_id = self.obtener_id_usuario(nombre_usuario)
         if not usuario_id:
             return False
-        with sqlite3.connect(self.conexion) as conn:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM sesiones WHERE usuario_id = ?", (usuario_id,))
-            conn.commit()
-            return cursor.rowcount > 0
+        with self.engine.begin() as conn:
+            res = conn.execute(
+                text("DELETE FROM usuarios.sesiones WHERE usuario_id = :usuario_id"),
+                {"usuario_id": usuario_id}
+            )
+            return res.rowcount > 0
