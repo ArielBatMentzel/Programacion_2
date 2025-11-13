@@ -30,14 +30,13 @@ Está diseñada para ejecutarse localmente con Python y también se puede desple
 
 ---
 
-
 ## Entorno Virtual
 Para evitar conflictos de librerías, se recomienda crear y activar un entorno virtual:
 ### 0. Crear entorno virtual (solo la primera vez)
 ```bash
 python -m venv venv
 ```
-1. Activar entorno virtual
+### 1. Activar entorno virtual
 - **Windows:**
 ```bash
 .\venv\Scripts\activate
@@ -46,11 +45,12 @@ python -m venv venv
 ```bash
 source venv/bin/activate
 ```
-2. Desactivar entorno virtual (opcional)
+### 2. Desactivar entorno virtual (opcional)
 ```bash
 deactivate
 ```
 
+---
 
 ## Instalación de Dependencias
 Instalar todas las librerías necesarias desde el archivo requirements.txt:
@@ -62,6 +62,7 @@ Si se agregan nuevas librerías, actualizar `requirements.txt`:
 pip freeze > requirements.txt
 ```
 
+---
 
 ## Estructura del Proyecto
 text
@@ -129,6 +130,7 @@ Proyecto/
     ├── scrapper.py
     └── __init__.py
 
+---
 
 ## Librerías Utilizadas
 Algunas librerías clave y su propósito:
@@ -153,50 +155,51 @@ loguru	0.7.0	Logging y registro de eventos
 
 > Nota: El archivo completo requirements.txt incluye todas las librerías necesarias para ejecutar la API.
 
+---
 
 ## Ejecución Local
-
-1. Activar el entorno virtual:
+### 1. Activar el entorno virtual:
 ```bash
 .\venv\Scripts\activate
 ```
-2. Ejecutar la API con Uvicorn:
+### 2. Ejecutar la API con Uvicorn:
 ```bash
 uvicorn main:cotizar --reload
 ```
 - Acceder a la documentación interactiva: http://127.0.0.1:8000/docs
 
+---
 
 ## Pruebas Unitarias
-
 Ejecutar todas las pruebas con pytest:
 ```bash
 pytest tests/
 ```
 
+---
 
 ## Despliegue con Docker y Render
 
--La aplicación se desplegó en Render utilizando Docker como lenguaje.
--Se configuró el directorio raíz como Proyecto.
--Render utiliza el Dockerfile incluido en el proyecto, por lo que no es necesario configurar build o start commands manualmente.
--Variable de entorno DB_URL configurada en Render para conexión con Supabase (contiene usuario, contraseña y URL de la base de datos).
+-La aplicación se desplegó en Render utilizando Docker como lenguaje.  
+-Se configuró el directorio raíz como Proyecto.  
+-Render utiliza el Dockerfile incluido en el proyecto, por lo que no es necesario configurar build o start commands manualmente.  
+-Variable de entorno DB_URL configurada en Render para conexión con Supabase (contiene usuario, contraseña y URL de la base de datos).  
 
 ### Ejecutar Docker localmente (opcional)
-1. Construir la imagen Docker:
+### 1. Construir la imagen Docker:
 ```bash
 docker build -t cotizar-api:latest .
 ```
-2. Ejecutar el contenedor:
+### 2. Ejecutar el contenedor:
 ```bash
 docker run -p 8000:8000 cotizar-api:latest
 ```
 - Acceder a la API en http://localhost:8000
-3. Ejecutar en segundo plano (detached):
+### 3. Ejecutar en segundo plano (detached):
 ```bash
 docker run -d -p 8000:8000 cotizar-api:latest
 ```
-4. etener contenedores:
+### 4. etener contenedores:
 ```bash
 docker stop <nombre_o_id_del_contenedor>
 ```
@@ -205,6 +208,7 @@ docker stop <nombre_o_id_del_contenedor>
 docker stop $(docker ps -q)
 ```
 
+---
 
 ## Notas
 -Se recomienda usar Python 3.11 para compatibilidad con todas las librerías.
