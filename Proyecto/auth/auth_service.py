@@ -28,13 +28,7 @@ esquema_oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/iniciar_sesion")
 
 def crear_hash_contraseña(contraseña: str) -> str:
     """Genera un hash seguro de la contraseña ingresada."""
-    # Convertir a bytes
-    if isinstance(contraseña, str):
-        contraseña_bytes = contraseña.encode("utf-8")
-    else:
-        contraseña_bytes = contraseña
-    # Retorna hash en string
-    return contexto_hash.hash(contraseña_bytes)
+    return contexto_hash.hash(contraseña)
 
 
 def verificar_contraseña(contraseña_plana: str,
@@ -43,12 +37,8 @@ def verificar_contraseña(contraseña_plana: str,
     Compara una contraseña ingresada con su versión hasheada.
     Devuelve True si coinciden, False si no.
     """
-    if isinstance(contraseña_plana, str):
-        contraseña_bytes = contraseña_plana.encode("utf-8")
-    else:
-        contraseña_bytes = contraseña_plana
+    return contexto_hash.verify(contraseña_plana, contraseña_hasheada)
 
-    return contexto_hash.verify(contraseña_bytes, contraseña_hasheada)
 
 # ======================
 # FUNCIONES PARA TOKENS JWT
