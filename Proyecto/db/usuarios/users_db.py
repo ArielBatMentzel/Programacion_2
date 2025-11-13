@@ -11,7 +11,7 @@ import os
 load_dotenv()
 DB_URL = os.getenv("DB_URL")
 if not DB_URL:
-    raise ValueError("⚠️ No se encontró la variable DB_URL en el entorno.")
+    raise ValueError("No se encontró la variable DB_URL en el entorno.")
 engine = create_engine(DB_URL)
 
 
@@ -76,7 +76,6 @@ class DataBaseUsuario(AbstractDatabase):
                 "telefono": telefono
             })
 
-
     def buscar_usuario_por_nombre(self, nombre_usuario: str):
         """Busca un usuario por su nombre de usuario y devuelve un diccionario."""
         
@@ -87,7 +86,6 @@ class DataBaseUsuario(AbstractDatabase):
             """), {"username": nombre_usuario}).mappings().first()
             return dict(fila) if fila else None
 
-
     def obtener_id_usuario(self, username: str) -> Optional[int]:
         """
         Devuelve el ID del usuario según su nombre.
@@ -97,10 +95,10 @@ class DataBaseUsuario(AbstractDatabase):
                                 {"username": username}).first()
             return fila[0] if fila else None
 
+
     # ==============================
     # MÉTODOS DE USUARIOS
     # ==============================
-
 
 
     def guardar(self, usuario: User):
@@ -122,14 +120,12 @@ class DataBaseUsuario(AbstractDatabase):
         except IntegrityError:
             return False
 
-
     def eliminar(self, id: int) -> bool:
         """Elimina un usuario y sus sesiones en base a su id."""
         with self.engine.begin() as conn:
             conn.execute(text("DELETE FROM usuarios.sesiones WHERE usuario_id = :id"), {"id": id})
             conn.execute(text("DELETE FROM usuarios.usuarios WHERE id = :id"), {"id": id})
         return True
-
     
     def consultar(self, campo: Optional[str] = None, valor: Optional[str] = None) -> List[User]:
         """Devuelve los usuarios, opcionalmente filtrados."""
@@ -146,7 +142,6 @@ class DataBaseUsuario(AbstractDatabase):
             usuarios_encontrados.append(User(email=fila["email"], nombre=fila["full_name"], tipo=fila["tipo"]))
         return usuarios_encontrados
     
-
 
     # ==============================
     # MÉTODOS DE ACTUALIZACIÓN DE USUARIOS
@@ -168,8 +163,6 @@ class DataBaseUsuario(AbstractDatabase):
             res = conn.execute(text(f"UPDATE usuarios.usuarios SET {campo} = :valor WHERE id = :id"),
                             {"valor": valor, "id": id_usuario})
             return res.rowcount > 0
-        
-
 
     def actualizar_completo(self, usuario: User) -> bool:
         """
@@ -216,7 +209,6 @@ class DataBaseUsuario(AbstractDatabase):
             print(f"⚠️ Error al guardar sesión: {e}")
             return False
 
-
     def consultar_sesion(self, token: str) -> Optional[Session]:
         """Devuelve la sesión correspondiente al token."""
         with self.engine.connect() as conn:
@@ -236,7 +228,6 @@ class DataBaseUsuario(AbstractDatabase):
                     fecha_expiracion=res[3]
                 )
             return None
-
 
     def eliminar_sesion(self, token: str) -> bool:
         """Elimina una sesión activa por su token."""
