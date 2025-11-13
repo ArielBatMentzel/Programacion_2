@@ -1,5 +1,6 @@
 # crear_admin.py
-
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.conexion_db import crear_engine
 import bcrypt
 from sqlalchemy import text
@@ -31,15 +32,14 @@ engine = crear_engine()
 try:
     with engine.connect() as conn:
         query = text("""
-            INSERT INTO usuarios.usuarios (username, hashed_password, full_name, tipo, email, telefono, rol)
-            VALUES (:username, :hashed_password, :full_name, :tipo, :email, :telefono, :rol)
+            INSERT INTO usuarios.usuarios (username, hashed_password, full_name, tipo, email, telefono)
+            VALUES (:username, :hashed_password, :full_name, :tipo, :email, :telefono)
             ON CONFLICT (username) DO UPDATE 
             SET hashed_password = excluded.hashed_password,
                 full_name = excluded.full_name,
                 tipo = excluded.tipo,
                 email = excluded.email,
-                telefono = excluded.telefono,
-                rol = excluded.rol
+                telefono = excluded.telefono
         """)
         conn.execute(query, {
             "username": USERNAME_ADMIN,
@@ -47,8 +47,7 @@ try:
             "full_name": FULL_NAME_ADMIN,
             "tipo": TIPO_ADMIN,
             "email": EMAIL_ADMIN,
-            "telefono": TELEFONO_ADMIN,
-            "rol": ROL_ADMIN
+            "telefono": TELEFONO_ADMIN
         })
         conn.commit()
     print(f"Usuario admin '{USERNAME_ADMIN}' creado o actualizado correctamente.")

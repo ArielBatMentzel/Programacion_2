@@ -72,8 +72,7 @@ def obtener_datos():
     try:
         with engine.connect() as conn:
             result = conn.execute(text("SELECT * FROM datos_financieros.dolar"))
-            datos = [dict(row) for row in result.fetchall()]
-        return datos
+            return [dict(row._mapping) for row in result]
     except SQLAlchemyError as e:
         raise Exception(f"Error al obtener datos del dolar: {e}")
 
