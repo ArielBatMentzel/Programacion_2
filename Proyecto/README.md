@@ -217,16 +217,16 @@ docker stop $(docker ps -q)
 > Cómo desplegar la API en Render utilizando Docker.
 Render ejecutará el contenedor de forma automática cada vez que se haga un nuevo push a GitHub (en `main`).
 ### 1. Subir el proyecto a Github
-- Asegurarse de que el proyecto esté dentro de una carpeta llamada Proyecto
+- Asegurarse de que el proyecto esté dentro de una carpeta llamada Proyecto.
 ### 2. Crear un nuevo servicio web en Render
 1. Entrar a [Render](https://render.com/) y crearse una cuenta.
 2. Iniciar un nuevo proyecto **New Web Service**.
 3. Conectar el proyecto con el repositorio de Github.
 4. Durante la configuración:
-- - En **Root Directory**, seleccionar la carpeta `Proyecto`
+- - En **Root Directory**, seleccionar la carpeta `Proyecto`.
 - - En **Language**, seleccionar `Docker` (no `python`).
 - - Con esto, Render detecta el `Dockerfile` automáticamente.
-- - En **Region**, elegir la más cercana
+- - En **Region**, elegir la más cercana.
 ### 3. Variables de entorno
 En la sección **Environment Variables**, agregar:
 ```bash
@@ -236,9 +236,12 @@ Es la variable que apunta a la base de datos de Supabase
 > Actualmente el modo gratuito de Supabase no incluye **IPv6**, por lo que hay que utilizar la variable de Session Pooler de Supabase (**IPv4**).
 ### 4. Deploy Automático
 Render construirá la imagen Docker y desplegará el servicio. 
+
 Cada vez que se haga un push al repositorio, Render volvera a hacer el Deploy.
+
 Una vez desplegado, Render ofrecerá una URL para verificar el funcionamiento del Servicio Web.
 
+---
 
 ## Notas
 -Se recomienda usar Python 3.11 para compatibilidad con todas las librerías.
