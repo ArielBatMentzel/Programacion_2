@@ -14,7 +14,7 @@ Está diseñada para ejecutarse localmente con Python y también se puede desple
 5. [Librerías Utilizadas](#librerías-utilizadas)  
 6. [Ejecución Local](#ejecución-local)  
 7. [Pruebas Unitarias](#pruebas-unitarias)  
-8. [Ejecución con docker (local)](#Ejecución-con-docker-(-local-))  
+8. [Ejecución local con docker](#Ejecución-local-con-docker)  
 9. [Despliegue en Render](#Despliegue-en-Render)
 
 ---
@@ -185,7 +185,7 @@ pytest tests/
 
 ---
 
-## Ejecución con docker (local)
+## Ejecución local con docker
 > Esta opción permite probar la API en un contenedor Docker local, sin depender de Render ni del entorno local de Python.
 ### 1. Descargar [Docker Desktop](https://www.docker.com/products/docker-desktop/), que incluye el motor Docker (para ejecutar `docker build` y `docker run`) y una interfaz para probar nuestras imagenes y contenedores.
 ### 2. Construir la imagen Docker:
