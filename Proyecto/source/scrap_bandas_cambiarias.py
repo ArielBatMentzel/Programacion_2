@@ -6,8 +6,8 @@ Elimina las filas existentes y carga las nuevas.
 
 import os
 import pandas as pd
-from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
+from sqlalchemy import text
+import utils.init_path
 from utils.conexion_db import crear_engine
 
 # Solo carga el .env si existe (útil localmente, el Render lo ignora)

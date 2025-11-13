@@ -7,6 +7,7 @@ from sqlalchemy import text
 import os
 import time
 import shutil
+import utils.init_path
 from utils.conexion_db import crear_engine
 
 print("Inicio del scraping de plazos fijos...")

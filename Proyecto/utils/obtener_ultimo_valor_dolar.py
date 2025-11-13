@@ -1,5 +1,6 @@
 from sqlalchemy import text, create_engine
 from utils.scrapper import scrap
+import utils.init_path
 from utils.conexion_db import crear_engine
 
 engine = crear_engine()

@@ -10,6 +10,7 @@ from sqlalchemy import text
 import os
 import re
 import shutil
+import utils.init_path
 from utils.conexion_db import crear_engine
 
 print("Iniciando scraping de dólar...")
