@@ -22,9 +22,9 @@ __pycache__/
 *.sqlite3
 
 # Ignoramos las carpetas que no son del proyecto
-factory/
-decorator/
-observer/
+# factory/
+# decorator/
+# observer/
 
 # Código que no se usa en producción
 Proyecto/codigo_local/
