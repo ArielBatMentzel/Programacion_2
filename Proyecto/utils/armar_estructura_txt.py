@@ -16,10 +16,13 @@ with open(output_file, "w", encoding="utf-8") as f:
         # Calcula el nivel de indentación según la profundidad
         level = dirpath.replace(root_dir, "").count(os.sep)
         indent = "    " * level
-        f.write(f"{indent}{os.path.basename(dirpath)}/\n")
+        f.write(f"{os.path.basename(dirpath)}/\n")
 
         subindent = "    " * (level + 1)
         for filename in filenames:
             f.write(f"{subindent}{filename}\n")
 
-print(f"✅ Estructura guardada en {output_file} (ignorando {', '.join(ignore_dirs)})")
+print(
+    f"✅ Estructura guardada en {output_file} "
+    f"(ignorando {', '.join(ignore_dirs)})"
+)

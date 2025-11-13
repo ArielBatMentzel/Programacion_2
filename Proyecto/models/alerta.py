@@ -1,9 +1,8 @@
-# archivo: models/alerta.py
-
 from typing import List
 from models.user import User
 from models.instruments import FixedIncomeInstrument
 from models.dolar import Dolar
+
 
 class Alerta:
     """
@@ -16,12 +15,16 @@ class Alerta:
         """
         Inicializa la alerta.
         :param usuario: instancia de User que creó la alerta
-        :param condicion: expresión o regla que define cuándo se dispara la alerta
+        :param condicion: expresión o regla que define cuándo se dispara
         """
         self.usuario = usuario
         self.condicion = condicion
 
-    def evaluar(self, dolar: Dolar, instrumentos: List[FixedIncomeInstrument]) -> bool:
+    def evaluar(
+        self,
+        dolar: Dolar,
+        instrumentos: List[FixedIncomeInstrument]
+    ) -> bool:
         """
         Evalúa si la condición de la alerta se cumple.
         :param dolar: objeto Dolar con valor actual

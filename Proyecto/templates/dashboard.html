@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+  <h2>Crear Plazo Fijo (prueba)</h2>
+
+  <form id="formPF">
+    <label>Usuario ID:</label><br>
+    <input type="text" id="usuario_id" placeholder="UUID del usuario"><br><br>
+
+    <label>Banco:</label><br>
+    <select id="banco"></select><br><br>
+
+    <label>Monto inicial:</label><br>
+    <input type="number" id="monto" step="0.01"><br><br>
+
+    <label>Días (opcional):</label><br>
+    <input type="number" id="dias" placeholder="30"><br><br>
+
+    <button type="submit">Crear Plazo Fijo</button>
+  </form>
+
+  <pre id="resultado"></pre>
+
+<script>
+async function cargarBancos() {
+    const res = await fetch("/instrumentos/plazos-fijos/bancos");
+    const bancos = await res.json();
+    const select = document.getElementById("banco");
+    bancos.forEach(b => {
+        const option = document.createElement("option");
+        option.value = b.banco;
+        option.text = `${b.banco} (Tasa: ${b.tasa_pct}%)`;
+        select.appendChild(option);
+    });
+}
+
+document.getElementById("formPF").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const usuario_id = document.getElementById("usuario_id").value.trim();
+    const banco = document.getElementById("banco").value;
+    const monto = parseFloat(document.getElementById("monto").value);
+    const diasVal = parseInt(document.getElementById("dias").value);
+    const body = {
+        usuario_id,
+        banco,
+        monto_inicial: monto
+    };
+    if (!isNaN(diasVal) && diasVal > 0) body.dias = diasVal;
+
+    const res = await fetch("/instrumentos/plazos-fijos/crear", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    document.getElementById("resultado").innerText = JSON.stringify(data, null, 2);
+});
+
+cargarBancos();
+</script>
+</body>
+</html>

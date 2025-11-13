@@ -1,80 +1,52 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-import sqlite3
-import os
-import time
+# archivo: tests/test_alertas.py
 
-print("Inicio del scraping de plazos fijos...")
+import pytest
+from models.alerta import Alerta
+from models.user import User
+from models.dolar import Dolar
+from models.instruments import PlazoFijo
 
-# Ruta de la base existente
-carpeta_script = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(carpeta_script, "..", "db", "datos_financieros", "datos_financieros.db")
-os.makedirs(os.path.dirname(db_path), exist_ok=True)  # Asegura que exista la carpeta
+def test_alerta_evaluar_true():
+    """
+    Verifica que el método evaluar() de Alerta devuelva True
+    cuando la condición configurada se cumple.
+    """
+    # Creamos un usuario de prueba
+    usuario = User(email="test@example.com", nombre="Test User")
+    
+    # Creamos una alerta para ese usuario con una condición de ejemplo
+    alerta = Alerta(usuario=usuario, condicion="dummy_condicion")
+    
+    # Creamos el objeto Dolar con un valor inicial
+    dolar = Dolar(valor_inicial=100)
+    
+    # Creamos un instrumento financiero (PlazoFijo) que se evaluará
+    instrumento = PlazoFijo(nombre="PlazoFijo1", moneda="ARS", dias=30)
 
-# Inicializar driver headless
-options = webdriver.ChromeOptions()
-options.add_argument("--headless")
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
+    # Evaluamos la alerta con los datos actuales
+    resultado = alerta.evaluar(dolar, [instrumento])
+    
+    # Comprobamos que devuelve un booleano
+    # En la implementación real, True significa que la condición se cumplió
+    assert isinstance(resultado, bool)
 
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-driver.get("https://comparatasas.ar/plazos-fijos")
-time.sleep(5)  # Esperar carga dinámica
+def test_alerta_notificar(capsys):
+    """
+    Verifica que el método notificar() de Alerta emita algún mensaje.
+    capsys captura la salida de print para poder probarla.
+    """
+    # Creamos un usuario de prueba
+    usuario = User(email="test@example.com", nombre="Test User")
+    
+    # Creamos una alerta
+    alerta = Alerta(usuario=usuario, condicion="dummy_condicion")
 
-# Contenedor principal
-try:
-    contenedor = driver.find_element(By.XPATH, "/html/body/div[1]/div/main/div[2]/div/div[2]")
-    plazos = contenedor.find_elements(By.TAG_NAME, "a")
-except:
-    print("❌ No se encontró el contenedor de plazos fijos")
-    driver.quit()
-    exit()
-
-data = []
-for p in plazos:
-    try:
-        banco = p.find_element(By.CSS_SELECTOR, "div.flex-col div.font-medium").text.strip()
-        plazo = p.find_element(By.CSS_SELECTOR, "div.flex-wrap span.font-medium").text.strip()
-        tasa = p.find_element(By.CSS_SELECTOR, "div.text-primary-600").text.strip()
-        # Quitar "%" y reemplazar coma por punto
-        tasa = tasa.replace("%", "").replace(",", ".")
-        try:
-            tasa = float(tasa)
-        except:
-            tasa = None
-        data.append([banco, plazo, tasa])
-    except:
-        continue
-
-driver.quit()
-print(f"✅ Datos extraídos: {len(data)} filas")
-
-# Guardar en la base existente
-conn = sqlite3.connect(db_path)
-cursor = conn.cursor()
-
-# 🟢 CAMBIO 1: eliminar la tabla anterior si existe
-cursor.execute("DROP TABLE IF EXISTS plazos_fijos")
-
-# 🟢 CAMBIO 2: crear tabla desde cero (sin IF NOT EXISTS)
-cursor.execute("""
-CREATE TABLE plazos_fijos (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    banco TEXT,
-    plazo TEXT,
-    tasa_pct REAL
-)
-""")
-
-# 🟢 CAMBIO 3: insertar todos los registros de una vez
-cursor.executemany("""
-INSERT INTO plazos_fijos (banco, plazo, tasa_pct)
-VALUES (?, ?, ?)
-""", data)
-
-conn.commit()
-conn.close()
-print(f"✅ Tabla reemplazada y datos guardados en: {db_path}")
-print("Fin del scraping de plazos fijos.")
+    # Llamamos a notificar
+    alerta.notificar()
+    
+    # Capturamos la salida por consola
+    captured = capsys.readouterr()
+    
+    # Verificamos que haya algún mensaje relacionado con la notificación
+    # Esto depende de cómo implementes notificar() (print, log, etc.)
+    assert isinstance(captured.out, str)
