@@ -4,7 +4,8 @@ from models.user import User, Session
 from db.abstract_db import AbstractDatabase
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
-import utils.init_path
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.conexion_db import crear_engine
 
 engine = crear_engine()

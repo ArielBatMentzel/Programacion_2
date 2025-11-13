@@ -4,10 +4,11 @@ from auth.auth_api import router as auth_router
 from utils.obtener_ultimo_valor_dolar import obtener_ultimo_valor_dolar
 from fastapi.responses import StreamingResponse
 from io import StringIO
-import os
 import sqlite3
 import pandas as pd
 import asyncio
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 """
 API CotizAR

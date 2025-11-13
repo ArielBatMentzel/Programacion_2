@@ -7,11 +7,12 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import WebDriverException
 from sqlalchemy import text
-import os
 import re
 import shutil
-import utils.init_path
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.conexion_db import crear_engine
+
 
 print("Iniciando scraping de dólar...")
 

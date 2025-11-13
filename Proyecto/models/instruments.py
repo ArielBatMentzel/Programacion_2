@@ -2,7 +2,8 @@
 
 from abc import ABC, abstractmethod
 from datetime import date, timedelta
-import utils.init_path
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.obtener_banda_cambiaria import obtener_banda_cambiaria
 from utils.obtener_ultimo_valor_dolar import obtener_dolar_oficial
 

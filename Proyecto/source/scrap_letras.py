@@ -4,10 +4,10 @@ base de datos de Supabase.
 Elimina las filas existentes y carga las nuevas.
 """
 
-import os
 import pandas as pd
 from sqlalchemy import text
-import utils.init_path
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.conexion_db import crear_engine
 
 engine = crear_engine()
