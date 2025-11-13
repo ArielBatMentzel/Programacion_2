@@ -3,7 +3,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
-from db.usuarios.users_db import DataBaseUsuario, RUTA_DB
+from db.usuarios.users_db import DataBaseUsuario
 from models.user import UsuarioPublico
 
 # ======================
@@ -75,7 +75,7 @@ async def obtener_usuario_actual(
     except JWTError:
         raise error_credenciales
 
-    db_usuarios = DataBaseUsuario(RUTA_DB)
+    db_usuarios = DataBaseUsuario()
     usuario = db_usuarios.buscar_usuario_por_nombre(nombre_usuario)
     if not usuario:
         raise error_credenciales

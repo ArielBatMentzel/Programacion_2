@@ -1,20 +1,17 @@
+from sqlalchemy import text, create_engine
+from utils.scrapper import scrap
 import os
-import sqlite3
-from .scrapper import scrap
 
-# Ruta segura a la DB desde utils
-DB_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)),
-    "db",
-    "datos_financieros",
-    "datos_financieros.db"
-)
+# URL de conexión a Supabase (ya la deberías tener en tus variables de entorno)
+DATABASE_URL = os.getenv("SUPABASE_DB_URL")
+# Crear el engine global de SQLAlchemy
+engine = create_engine(DATABASE_URL)
 
 
 def obtener_ultimo_valor_dolar(tipo: str = "DÓLAR BLUE") -> float:
     """
-    Devuelve el último valor de venta del dólar según el tipo.
-    Actualiza primero los datos mediante scraping.
+    Devuelve el último valor de venta del dólar según el tipo,
+    consultando directamente en la base de datos de Supabase.
 
     Args:
         tipo (str): Tipo de dólar (ej: 'DÓLAR BLUE', 'DÓLAR OFICIAL').
@@ -25,33 +22,30 @@ def obtener_ultimo_valor_dolar(tipo: str = "DÓLAR BLUE") -> float:
     Raises:
         ValueError: Si no se encuentra el tipo en la base de datos.
     """
+    # Ejecutar scraping antes (actualiza la tabla si corresponde)
     scrap(["dolar"])
 
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        SELECT venta 
-        FROM dolar 
-        WHERE tipo = ? 
-        ORDER BY id DESC 
-        LIMIT 1
-        """,
-        (tipo,)
-    )
-    row = cursor.fetchone()
-    conn.close()
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("""
+                SELECT venta
+                FROM datos_financieros.dolar
+                WHERE tipo = :tipo
+                ORDER BY id DESC
+                LIMIT 1
+            """),
+            {"tipo": tipo}
+        )
+        row = result.fetchone()
 
     if row:
         return float(row[0])
-    raise ValueError(
-        f"No se encontró el valor del dólar para el tipo '{tipo}'."
-        )
 
+    raise ValueError(f"No se encontró el valor del dólar para el tipo '{tipo}'.")
 
 def obtener_dolar_oficial() -> float | None:
     """
-    Helper para obtener el último valor del DÓLAR OFICIAL desde la BD.
+    Helper para obtener el último valor del dólar oficial desde la BD.
     Maneja errores y devuelve None si falla.
 
     Returns:
@@ -61,5 +55,5 @@ def obtener_dolar_oficial() -> float | None:
     try:
         return obtener_ultimo_valor_dolar("DÓLAR OFICIAL")
     except Exception as e:
-        print(f"⚠️ Error obteniendo dólar oficial: {e}")
+        print(f"Error obteniendo dólar oficial: {e}")
         return None

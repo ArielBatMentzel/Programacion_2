@@ -1,19 +1,14 @@
 # utils/obtener_banda_cambiaria.py
-import sqlite3
+from sqlalchemy import text, create_engine
 import os
 
-DB_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "..",
-    "db",
-    "datos_financieros",
-    "datos_financieros.db"
-)
+DATABASE_URL = os.getenv("SUPABASE_DB_URL")
+engine = create_engine(DATABASE_URL)
 
 
 def obtener_banda_cambiaria(mes: str = None):
     """
-    Devuelve la banda inferior y superior para un mes.
+    Devuelve la banda inferior y superior para un mes desde Supabase.
     Si no se pasa mes, toma el último disponible.
 
     Args:
@@ -24,34 +19,29 @@ def obtener_banda_cambiaria(mes: str = None):
         tuple[float, float] | tuple[None, None]:
         (banda_inferior, banda_superior)
     """
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+    with engine.connect() as conn:
+        if mes:
+            result = conn.execute(
+                text("""
+                    SELECT banda_inferior, banda_superior
+                    FROM datos_financieros.bandas_cambiarias
+                    WHERE fecha = :mes
+                    ORDER BY id DESC
+                    LIMIT 1
+                """),
+                {"mes": mes}
+            )
+        else:
+            result = conn.execute(
+                text("""
+                    SELECT banda_inferior, banda_superior
+                    FROM datos_financieros.bandas_cambiarias
+                    ORDER BY id DESC
+                    LIMIT 1
+                """)
+            )
 
-    if mes:
-        # Buscar por mes exacto
-        cursor.execute(
-            """
-            SELECT banda_inferior, banda_superior
-            FROM bandas_cambiarias
-            WHERE fecha = ?
-            ORDER BY id DESC
-            LIMIT 1
-            """,
-            (mes,)
-        )
-    else:
-        # Última disponible
-        cursor.execute(
-            """
-            SELECT banda_inferior, banda_superior
-            FROM bandas_cambiarias
-            ORDER BY id DESC
-            LIMIT 1
-            """
-        )
-
-    row = cursor.fetchone()
-    conn.close()
+        row = result.fetchone()
 
     if row:
         return float(row[0]), float(row[1])
