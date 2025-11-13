@@ -8,15 +8,11 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
-
+from utils.conexion_db import crear_engine
 
 # Solo carga el .env si existe (útil localmente, el Render lo ignora)
 # Porque setea sus propias variables de entorno (setea el mismo el DB_URL)
-load_dotenv()
-DB_URL = os.getenv("DB_URL")
-if not DB_URL:
-    raise ValueError("⚠️ No se encontró la variable DB_URL en el entorno.")
-engine = create_engine(DB_URL)
+engine = crear_engine()
 
 
 def _to_float(val):

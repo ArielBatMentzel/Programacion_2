@@ -6,23 +6,18 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import WebDriverException
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 import os
 import re
 import shutil
-from dotenv import load_dotenv
+from utils.conexion_db import crear_engine
 
 print("Iniciando scraping de dólar...")
 
 # CONFIG DB (Supabase via SQLAlchemy)
-load_dotenv()
-DB_URL = os.getenv("DB_URL")
-if not DB_URL:
-    raise ValueError("⚠️ No se encontró la variable DB_URL en el entorno.")
-engine = create_engine(DB_URL)
+engine = crear_engine()
 
 # CONFIGURAR SELENIUM 
-
 options = Options()
 options.add_argument("--headless")
 options.add_argument("--no-sandbox")

@@ -3,19 +3,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import WebDriverException
-from sqlalchemy import create_engine, text
-from dotenv import load_dotenv
+from sqlalchemy import text
 import os
 import time
 import shutil
+from utils.conexion_db import crear_engine
 
 print("Inicio del scraping de plazos fijos...")
 
-load_dotenv()
-DB_URL = os.getenv("DB_URL")
-if not DB_URL:
-    raise ValueError("⚠️ No se encontró la variable DB_URL en el entorno.")
-engine = create_engine(DB_URL)
+engine = crear_engine()
 
 options = webdriver.ChromeOptions()
 options.add_argument("--headless")  # Ejecuta sin abrir ventana

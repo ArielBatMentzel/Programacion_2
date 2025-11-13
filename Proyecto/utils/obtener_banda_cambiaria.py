@@ -1,9 +1,8 @@
 # utils/obtener_banda_cambiaria.py
 from sqlalchemy import text, create_engine
-import os
+from utils.conexion_db import crear_engine
 
-DATABASE_URL = os.getenv("SUPABASE_DB_URL")
-engine = create_engine(DATABASE_URL)
+engine = crear_engine()
 
 
 def obtener_banda_cambiaria(mes: str = None):

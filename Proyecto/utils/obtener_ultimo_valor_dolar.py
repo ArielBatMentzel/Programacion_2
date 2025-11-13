@@ -1,11 +1,8 @@
 from sqlalchemy import text, create_engine
 from utils.scrapper import scrap
-import os
+from utils.conexion_db import crear_engine
 
-# URL de conexión a Supabase (ya la deberías tener en tus variables de entorno)
-DATABASE_URL = os.getenv("SUPABASE_DB_URL")
-# Crear el engine global de SQLAlchemy
-engine = create_engine(DATABASE_URL)
+engine = crear_engine()
 
 
 def obtener_ultimo_valor_dolar(tipo: str = "DÓLAR BLUE") -> float:

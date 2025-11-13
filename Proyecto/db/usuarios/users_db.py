@@ -2,18 +2,11 @@
 from typing import Optional, List
 from models.user import User, Session
 from db.abstract_db import AbstractDatabase
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
-from dotenv import load_dotenv
-import os
+from utils.conexion_db import crear_engine
 
-
-load_dotenv()
-DB_URL = os.getenv("DB_URL")
-if not DB_URL:
-    raise ValueError("No se encontró la variable DB_URL en el entorno.")
-engine = create_engine(DB_URL)
-
+engine = crear_engine()
 
 class DataBaseUsuario(AbstractDatabase):
     """
