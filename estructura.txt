@@ -23,12 +23,12 @@ datasets/
 db/
         abstract_db.py
 datos_financieros/
-            crear_db_financieros.py
+            crear_db_financieros_local.py
             datos_financieros.db
             __init__.py
 usuarios/
             crear_admin.py
-            crear_db_usuarios.py
+            crear_db_usuarios_local.py
             users_db.py
             usuarios.db
             __init__.py
@@ -54,8 +54,9 @@ tests/
         test_instruments.py
 utils/
         armar_estructura_txt.py
-        conexion_db
+        conexion_db.py
         helpers.py
+        init_path.py
         obtener_banda_cambiaria.py
         obtener_ultimo_valor_dolar.py
         scrapper.py
