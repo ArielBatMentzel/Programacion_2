@@ -4,11 +4,14 @@ from auth.auth_api import router as auth_router
 from utils.obtener_ultimo_valor_dolar import obtener_ultimo_valor_dolar
 from fastapi.responses import StreamingResponse
 from io import StringIO
-import sqlite3
 import pandas as pd
 import asyncio
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.conexion_db import crear_engine
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+
 
 """
 API CotizAR
@@ -33,13 +36,8 @@ cotizar = FastAPI(title="CotizAR API")
 # Registrar router de autenticación
 cotizar.include_router(auth_router)
 
-# Ruta al archivo de base de datos
-DB_PATH = os.path.join(
-    os.path.dirname(__file__),
-    "db",
-    "datos_financieros",
-    "datos_financieros.db",
-)
+# Crear engine de conexión a Supabase
+engine = crear_engine()
 
 
 #######################################################################
@@ -71,14 +69,13 @@ async def mostrar_dolar_hoy():
 #######################################################################
 # Función auxiliar para obtener datos de la base
 def obtener_datos():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM dolar")
-    datos = cursor.fetchall()
-    conn.close()
-    return [dict(fila) for fila in datos]
-
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT * FROM datos_financieros.dolar"))
+            datos = [dict(row) for row in result.fetchall()]
+        return datos
+    except SQLAlchemyError as e:
+        raise Exception(f"Error al obtener datos del dolar: {e}")
 
 # Endpoint para mostrar todas las cotizaciones
 @cotizar.get(
@@ -97,7 +94,7 @@ async def mostrar_cotizaciones():
 
 
 #######################################################################
-# Endpoint para exportar la tabla como CSV
+# Endpoint para exportar la tabla del dolar como CSV
 @cotizar.get(
     "/exportar_dolar",
     summary="Exportar cotizaciones de dolar a CSV",
@@ -106,15 +103,16 @@ async def mostrar_cotizaciones():
 )
 async def exportar_csv():
     loop = asyncio.get_running_loop()
-
     def exportar():
-        conn = sqlite3.connect(DB_PATH)
-        df = pd.read_sql_query("SELECT * FROM dolar", conn)
-        conn.close()
-        stream = StringIO()
-        df.to_csv(stream, index=False)
-        stream.seek(0)
-        return stream
+        try:
+            with engine.connect() as conn:
+                df = pd.read_sql("SELECT * FROM datos_financieros.dolar", conn)
+            stream = StringIO()
+            df.to_csv(stream, index=False)
+            stream.seek(0)
+            return stream
+        except SQLAlchemyError as e:
+            raise Exception(f"Error al exportar dolar como CSV: {e}")
 
     stream = await loop.run_in_executor(None, exportar)
     return StreamingResponse(
@@ -122,5 +120,5 @@ async def exportar_csv():
         media_type="text/csv",
         headers={
             "Content-Disposition": "attachment; filename=cotizaciones.csv"
-            },
+        },
     )

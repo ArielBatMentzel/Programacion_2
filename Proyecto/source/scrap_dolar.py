@@ -62,7 +62,7 @@ except WebDriverException:
     
 # Abrir página
 driver.get("https://dolarhoy.com/")
-wait = WebDriverWait(driver, 10)
+wait = WebDriverWait(driver, 7)
 
 # Extraer los datos
 bloques = wait.until(
