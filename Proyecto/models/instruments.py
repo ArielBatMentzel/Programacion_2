@@ -97,7 +97,7 @@ class FixedIncomeInstrument(ABC):
 class PlazoFijo(FixedIncomeInstrument):
     """Instrumento Plazo Fijo."""
 
-    def __init__(self, nombre: str, moneda: str, dias: int, tasa_tna: float):
+    def __init__(self, banco: str, tasa_tna: float, dias: int = 30):
         """
         Inicializa un Plazo Fijo.
 
@@ -107,9 +107,10 @@ class PlazoFijo(FixedIncomeInstrument):
             dias (int): Plazo en días.
             tasa_tna (float): Tasa nominal anual en porcentaje.
         """
-        super().__init__(nombre, moneda)
+        super().__init__(nombre=banco, moneda="ARS")
         self.dias = dias
         self.tasa_tna = tasa_tna
+
 
     def calcular_rendimiento(
             self, monto_inicial: float, tipo_cambio_actual: float = None
