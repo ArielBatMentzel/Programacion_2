@@ -25,38 +25,40 @@ options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 
-# Intentamos primero con el driver del sistema (Render)
-try:
-    driver = webdriver.Chrome(service=Service("/usr/bin/chromedriver"), options=options)
-    print("Usando ChromeDriver del sistema (/usr/bin/chromedriver)")
+# Detectar entorno y asignar driver
+if os.getenv("RENDER"):
+    # Entorno Render
+    chromium_path = "/usr/bin/chromium"
+    chromedriver_path = "/usr/bin/chromedriver"
 
-# Si falla, usamos webdriver_manager (para entorno local)
+    if not os.path.exists(chromium_path) or not os.path.exists(chromedriver_path):
+        raise FileNotFoundError(f"En Render no se encontró Chromium o ChromeDriver en {chromium_path} / {chromedriver_path}")
+
+    options.binary_location = chromium_path
+    service = Service(chromedriver_path)
+    print("Usando Chromium y ChromeDriver del sistema (Render)")
+else:
+    # Entorno local
+    service = Service()  # Selenium busca automáticamente el driver en el PATH
+    print("Usando Chrome local (PATH)")
+
+#Crear driver con manejo de errores
+try:
+    driver = webdriver.Chrome(service=service, options=options)
 except WebDriverException:
-    print("Error con ChromeDriver del sistema, intentando con webdriver_manager...")
-    try:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        print("ChromeDriverManager instalado correctamente")
-    except WebDriverException as e:
-        print("Error con ChromeDriverManager, limpiando caché y reintentando...")
-        shutil.rmtree(os.path.expanduser("~/.wdm"), ignore_errors=True)
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-        print("ChromeDriverManager reinstalado correctamente")
-
-
-
-driver = webdriver.Chrome(service=Service("/usr/bin/chromedriver"), options=options)
-
-# Abrir navegador (se autorepara si ChromeDriver falla)
-try:
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()), options=options
-    )
-except WebDriverException as e:
-    print("⚠️ Error con ChromeDriver, limpiando caché y reintentando...")
-    shutil.rmtree(os.path.expanduser("~/.wdm"), ignore_errors=True)
-    driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()), options=options
-    )
+    # Solo en local, intentar webdriver_manager
+    if not os.getenv("RENDER"):
+        print("Error con ChromeDriver del sistema, intentando con ChromeDriverManager...")
+        try:
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+            print("ChromeDriverManager instalado correctamente")
+        except WebDriverException:
+            print("Error con ChromeDriverManager, limpiando caché y reintentando...")
+            shutil.rmtree(os.path.expanduser("~/.wdm"), ignore_errors=True)
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+            print("ChromeDriverManager reinstalado correctamente")
+    else:
+        raise  # En Render, propagamos el error si falla
     
 # Abrir página
 driver.get("https://dolarhoy.com/")
