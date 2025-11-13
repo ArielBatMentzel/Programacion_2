@@ -4,58 +4,35 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.conexion_db import crear_engine
 from sqlalchemy import text
-from fastapi import FastAPI, HTTPException
-
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Request, HTTPException
 
 
-templates = Jinja2Templates(directory="templates")
-
-
-
-
-
-
-# Instancia principal de FastAPI
-cotizar = FastAPI(title="CotizAR API")
-
+# Inicialización de Variables
+router = APIRouter()
 engine = crear_engine()
 
+# Modelo para trabajar con los datos
 class PlazoFijoInput(BaseModel):
-    usuario_id: str
+    usuario_username: str
     banco: str
     monto_inicial: float
 
-
-@cotizar.get("/dashboard", response_class=HTMLResponse)
-async def mostrar_dashboard(request: Request):
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {"request": request}
-    )
-
-
-
-
-
-@cotizar.get("/instrumentos/plazos-fijos/bancos")
+#### Endpoints
+@router.get("/instrumentos/plazos-fijos/bancos")
 def obtener_bancos():
     try:
         with engine.connect() as conn:
             result = conn.execute(
                 text("SELECT banco, tasa_pct FROM datos_financieros.plazos_fijos")
             )
-            bancos = [dict(row) for row in result.fetchall()]
+            bancos = [dict(row._mapping) for row in result]
         return bancos
     except Exception as e:
         # loguealo si querés; por ahora devolvemos 500
         raise HTTPException(status_code=500, detail=f"Error obteniendo bancos: {e}")
 
 
-
-@cotizar.post("/instrumentos/plazos-fijos/crear")
+@router.post("/instrumentos/plazos-fijos/crear")
 def crear_plazo_fijo(data: PlazoFijoInput):
     # 1) Obtener la tasa del banco desde la tabla de datos_financieros
     try:
@@ -93,13 +70,13 @@ def crear_plazo_fijo(data: PlazoFijoInput):
             conn.execute(
                 text("""
                     INSERT INTO instrumentos_usuarios.plazos_fijos_usuarios
-                    (usuario_id, nombre, banco, tasa_pct, monto_inicial,
+                    (usuario_username, nombre, banco, tasa_pct, monto_inicial,
                      monto_final_pesos, ganancia_pesos, fecha_calculo)
-                    VALUES (:usuario_id, :nombre, :banco, :tasa_pct, :monto,
+                    VALUES (:usuario_username, :nombre, :banco, :tasa_pct, :monto,
                             :monto_final, :ganancia, NOW())
                 """),
                 {
-                    "usuario_id": data.usuario_id,
+                    "usuario_username": data.usuario_username,
                     "nombre": f"Plazo Fijo {data.banco} {dias}d",
                     "banco": data.banco,
                     "tasa_pct": tasa_tna,
