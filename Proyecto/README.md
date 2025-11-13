@@ -1,7 +1,7 @@
 # API Cotizar
 
-Este proyecto es una API desarrollada en **FastAPI** para obtener y procesar información financiera: tipo de cambio, bonos, letras, alertas, usuarios y otros instrumentos de renta fija.  
-Está diseñada para ejecutarse localmente con Python y también se puede desplegar en **Render** utilizando Docker.
+Este proyecto es una API desarrollada en **FastAPI** para obtener y procesar información financiera: bandas cambiarias, instrumentos financieros como los bonos, letras y plazos fijos, entre otros. Permite la creación de usuarios e incluye alertas personalizadas.
+Está diseñada para ejecutarse localmente y también se puede desplegar en **Render** utilizando Docker.
 
 ---
 
