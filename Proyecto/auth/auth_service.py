@@ -28,7 +28,13 @@ esquema_oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/iniciar_sesion")
 
 def crear_hash_contraseña(contraseña: str) -> str:
     """Genera un hash seguro de la contraseña ingresada."""
-    return contexto_hash.hash(contraseña)
+    # Convertir a bytes
+    if isinstance(contraseña, str):
+        contraseña_bytes = contraseña.encode("utf-8")
+    else:
+        contraseña_bytes = contraseña
+    # Retorna hash en string
+    return contexto_hash.hash(contraseña_bytes)
 
 
 def verificar_contraseña(contraseña_plana: str,
