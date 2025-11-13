@@ -14,7 +14,8 @@ Está diseñada para ejecutarse localmente con Python y también se puede desple
 5. [Librerías Utilizadas](#librerías-utilizadas)  
 6. [Ejecución Local](#ejecución-local)  
 7. [Pruebas Unitarias](#pruebas-unitarias)  
-8. [Despliegue con Docker y Render](#despliegue-con-docker-y-render)  
+8. [Ejecución con docker (local)](#Ejecución-con-docker-(local))  
+9. [Despliegue en Render](#Despliegue-en-Render)
 
 ---
 
@@ -184,20 +185,11 @@ pytest tests/
 
 ---
 
-## Despliegue con Docker y Render
-
--La aplicación se desplegó en Render utilizando Docker como lenguaje.  
-
--Se configuró el directorio raíz como `Proyecto`.  
-
--Render utiliza el Dockerfile incluido en el proyecto, por lo que no es necesario configurar build o start commands manualmente.  
-
--Variable de entorno `DB_URL` configurada en Render para conexión con Supabase (contiene usuario, contraseña y URL de la base de datos).  
-
-### Ejecutar Docker localmente (opcional)
-### 1. Descargamos Docker Desktop, que incluye el motor Docker (para ejecutar `docker build` y `docker run`) y una interfaz para probar nuestras imagenes y contenedores e manera local
-[Docker Desktop](https://www.docker.com/products/docker-desktop/)
+## Ejecución con docker (local)
+> Esta opción permite probar la API en un contenedor Docker local, sin depender de Render ni del entorno local de Python.
+### 1. Descargar [Docker Desktop](https://www.docker.com/products/docker-desktop/), que incluye el motor Docker (para ejecutar `docker build` y `docker run`) y una interfaz para probar nuestras imagenes y contenedores.
 ### 2. Construir la imagen Docker:
+Desde la carpeta `Proyecto/`
 ```bash
 docker build -t cotizar-api:latest .
 ```
@@ -206,7 +198,7 @@ docker build -t cotizar-api:latest .
 docker run -p 8000:8000 cotizar-api:latest
 ```
 - Acceder a la API en `http://localhost:8000`
-### 4. Ejecutar en segundo plano (detached):
+### 4. Ejecutar en segundo plano (sin bloquear la terminal):
 ```bash
 docker run -d -p 8000:8000 cotizar-api:latest
 ```
@@ -214,12 +206,39 @@ docker run -d -p 8000:8000 cotizar-api:latest
 ```bash
 docker stop <nombre_o_id_del_contenedor>
 ```
-- Para detener todos los contenedores:
+- O para detener todos los contenedores:
 ```bash
 docker stop $(docker ps -q)
 ```
 
 ---
+
+## Despliegue en Render
+> Cómo desplegar la API en Render utilizando Docker.
+Render ejecutará el contenedor de forma automática cada vez que se haga un nuevo push a GitHub (en `main`).
+### 1. Subir el proyecto a Github
+- Asegurarse de que el proyecto esté dentro de una carpeta llamada Proyecto
+### 2. Crear un nuevo servicio web en Render
+1. Entrar a [Render](https://render.com/) y crearse una cuenta.
+2. Iniciar un nuevo proyecto **New Web Service**.
+3. Conectar el proyecto con el repositorio de Github.
+4. Durante la configuración:
+- - En **Root Directory**, seleccionar la carpeta `Proyecto`
+- - En **Language**, seleccionar `Docker` (no `python`).
+- - Con esto, Render detecta el `Dockerfile` automáticamente.
+- - En **Region**, elegir la más cercana
+### 3. Variables de entorno
+En la sección **Environment Variables**, agregar:
+```bash
+DB_URL=postgresql://usuario:contraseña@host:puerto/nombre_basedatos
+```
+Es la variable que apunta a la base de datos de Supabase
+> Actualmente el modo gratuito de Supabase no incluye **IPv6**, por lo que hay que utilizar la variable de Session Pooler de Supabase (**IPv4**).
+### 4. Deploy Automático
+Render construirá la imagen Docker y desplegará el servicio. 
+Cada vez que se haga un push al repositorio, Render volvera a hacer el Deploy.
+Una vez desplegado, Render ofrecerá una URL para verificar el funcionamiento del Servicio Web.
+
 
 ## Notas
 -Se recomienda usar Python 3.11 para compatibilidad con todas las librerías.
@@ -227,10 +246,3 @@ docker stop $(docker ps -q)
 -Variables sensibles se manejan con `.env` localmente y `DB_URL` en Render.
 
 -La API integra datos de Supabase (PostgreSQL), scraping web y notificaciones de alertas.
-
-
-
-
-
-
-
