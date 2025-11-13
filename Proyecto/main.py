@@ -55,7 +55,7 @@ async def inicio():
 #######################################################################
 # Endpoint para obtener el último valor del dólar
 @cotizar.get("/dolar")
-async def mostrar_dolar_hoy():
+async def mostrar_dolar_oficial_hoy():
     loop = asyncio.get_running_loop()
     try:
         valor = await loop.run_in_executor(None, obtener_ultimo_valor_dolar)
