@@ -196,9 +196,7 @@ pytest tests/
 
 ### Ejecutar Docker localmente (opcional)
 ### 1. Descargamos Docker Desktop, que incluye el motor Docker (para ejecutar `docker build` y `docker run`) y una interfaz para probar nuestras imagenes y contenedores e manera local
-```bash
-https://www.docker.com/products/docker-desktop/
-```
+[Docker Desktop](https://www.docker.com/products/docker-desktop/)
 ### 2. Construir la imagen Docker:
 ```bash
 docker build -t cotizar-api:latest .
