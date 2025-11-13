@@ -43,7 +43,12 @@ def verificar_contraseña(contraseña_plana: str,
     Compara una contraseña ingresada con su versión hasheada.
     Devuelve True si coinciden, False si no.
     """
-    return contexto_hash.verify(contraseña_plana, contraseña_hasheada)
+    if isinstance(contraseña_plana, str):
+        contraseña_bytes = contraseña_plana.encode("utf-8")
+    else:
+        contraseña_bytes = contraseña_plana
+
+    return contexto_hash.verify(contraseña_bytes, contraseña_hasheada)
 
 # ======================
 # FUNCIONES PARA TOKENS JWT
