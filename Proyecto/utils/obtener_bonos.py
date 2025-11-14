@@ -34,23 +34,3 @@ def obtener_tipo_cambio() -> Dict[str, float]:
     with engine.connect() as conn:
         result = conn.execute(text("SELECT * FROM datos_financieros.dolar"))
         return {row._mapping["tipo"]: float(row._mapping["venta"]) for row in result}
-
-
-
-# def obtener_bonos_desde_bd(moneda: str = None) -> List[Dict[str, Any]]:
-#     """
-#     Consulta bonos desde la base de datos, opcionalmente filtrando por moneda.
-
-#     Args:
-#         moneda (str, optional): 'ARS' o 'USD'. Si None, devuelve todos.
-
-#     Returns:
-#         List[Dict[str, Any]]: Lista de bonos.
-#     """
-#     query = "SELECT * FROM datos_financieros.bonos"
-#     if moneda in ("ARS", "USD"):
-#         query += " WHERE moneda = :moneda"
-
-#     with engine.connect() as conn:
-#         result = conn.execute(text(query), {"moneda": moneda} if moneda else {})
-#         return [dict(row._mapping) for row in result]

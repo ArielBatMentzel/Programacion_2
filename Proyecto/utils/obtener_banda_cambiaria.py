@@ -1,6 +1,7 @@
 # utils/obtener_banda_cambiaria.py
 from sqlalchemy import text
-import utils.init_path
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.conexion_db import engine
 
 

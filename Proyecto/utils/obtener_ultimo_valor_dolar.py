@@ -1,6 +1,7 @@
-from sqlalchemy import text, create_engine
-from Proyecto.utils.scrap_runner import scrap
-import utils.init_path
+from sqlalchemy import text
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.scrap_runner import scrap
 from utils.conexion_db import engine
 
 

@@ -1,9 +1,6 @@
 # main.py
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.conexion_db import engine
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
 from fastapi import FastAPI
 from auth.auth_api import router as auth_router
 from routers.crear_plazo_fijo import router as plazo_fijo_router
