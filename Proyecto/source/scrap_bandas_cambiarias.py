@@ -1,9 +1,3 @@
-"""
-Carga los datos de bandas cambiarias desde CSV a la 
-base de datos de Supabase.
-Elimina las filas existentes y carga las nuevas.
-"""
-
 import pandas as pd
 from sqlalchemy import text
 import sys, os
@@ -12,7 +6,6 @@ from utils.conexion_db import engine
 
 # Solo carga el .env si existe (útil localmente, el Render lo ignora)
 # Porque setea sus propias variables de entorno (setea el mismo el DB_URL)
-
 
 def _to_float(val):
     """
@@ -40,13 +33,6 @@ def reemplazar_tabla_bandas_con_csv(
     con los datos del CSV.
     - Elimina todas las filas existentes
     - Inserta los datos del CSV
-
-    CSV esperado:
-    fecha,banda_inferior,banda_superior,ancho
-
-    :param csv_path: ruta del CSV
-    :param tabla: ruta de la tabla en el Supabase a reemplazar
-    :return: dict con información de la operación
     """
     esquema_db = tabla.split(".")[0]
     tabla_db = tabla.split(".")[-1]
@@ -55,7 +41,7 @@ def reemplazar_tabla_bandas_con_csv(
         raise FileNotFoundError(f"No se encontró el CSV: {csv_path}")
 
     # Leer CSV
-    df = pd.read_csv(csv_path, dtype=str)
+    df = pd.read_csv(csv_path, dtype=str, encoding='utf-8-sig')
 
     # Columnas esperadas
     esperadas = ["fecha", "banda_inferior", "banda_superior", "ancho"]
@@ -70,6 +56,10 @@ def reemplazar_tabla_bandas_con_csv(
     df["banda_superior"] = df["banda_superior"].map(_to_float)
     df["ancho"] = df["ancho"].map(_to_float)
     
+    # Eliminar la columna 'id' del DataFrame para evitar inserción manual
+    if "id" in df.columns:
+        df = df.drop(columns=["id"])
+
     # Conectar a Supabase y reemplazar tabla
     with engine.begin() as conn:
         # Verificar si existe la tabla
@@ -89,22 +79,45 @@ def reemplazar_tabla_bandas_con_csv(
                 text(f"DELETE FROM {esquema_db}.{tabla_db}")
             ).rowcount
 
-            # Reiniciar secuencia solo si hubo filas borradas
+            # Verificar si la secuencia existe para reiniciarla
+            secuencia_existe = conn.execute(
+                text(f"""
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM information_schema.sequences
+                        WHERE sequence_schema = '{esquema_db}'
+                        AND sequence_name = '{tabla_db}_id_seq'
+                    )
+                """)
+            ).scalar()
+
+            # Si la secuencia no existe, crearla
+            if not secuencia_existe:
+                conn.execute(
+                    text(f"""
+                        CREATE SEQUENCE {esquema_db}.{tabla_db}_id_seq 
+                        START WITH 1 
+                        INCREMENT BY 1;
+                    """)
+                )
+
+            # Reiniciar la secuencia solo si hubo filas borradas
             if filas_borradas > 0:
                 conn.execute(
                     text(f"ALTER SEQUENCE {esquema_db}.{tabla_db}_id_seq RESTART WITH 1")
                 )
         else:
-            # agregar columna id incremental
+            # Si la tabla no existe, agregar columna id incremental
             df.insert(0, "id", range(1, len(df) + 1))
 
-        # Insertar datos del CSV (crea tabla si no existía)
+        # Insertar los datos, sin incluir 'id'
         df.to_sql(
             tabla_db,
             conn,
             schema=esquema_db,
             if_exists="append",
-            index=False
+            index=False,
+            method="multi"
         )
 
 
@@ -112,8 +125,7 @@ def reemplazar_tabla_bandas_con_csv(
         "tabla": tabla,
         "filas_insertadas": len(df),
         "csv": os.path.abspath(csv_path)
-    }
-    
+    }    
 
 # --- Ejecutar directo ---
 if __name__ == "__main__":

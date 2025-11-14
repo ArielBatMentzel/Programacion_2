@@ -18,7 +18,7 @@ SCRAPERS_MAP = {
     "bandas": "scrap_bandas_cambiarias.py",
 }
 
-MAX_CONCURRENCY = 3  # Máximo de scrapers ejecutándose a la vez
+MAX_CONCURRENCY = 2  # Máximo de scrapers ejecutándose a la vez
 
 
 def run_scraper_blocking(nombre: str):
@@ -80,3 +80,9 @@ def scrap(nombres: List[str]):
             ]
         for _ in as_completed(futures):
             pass
+
+# Este bloque asegura que el código solo se ejecutará si el script se ejecuta directamente
+if __name__ == "__main__":
+    # Lista de scrapers a ejecutar
+    scrapers_a_ejecutar = ["dolar", "plazo_fijo"]  # Puedes cambiar esto según lo que necesites
+    scrap(scrapers_a_ejecutar)

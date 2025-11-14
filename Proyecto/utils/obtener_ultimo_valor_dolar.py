@@ -1,5 +1,5 @@
 from sqlalchemy import text, create_engine
-from utils.scrapper import scrap
+from Proyecto.utils.scrap_runner import scrap
 import utils.init_path
 from utils.conexion_db import engine
 

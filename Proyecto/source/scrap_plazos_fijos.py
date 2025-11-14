@@ -1,8 +1,11 @@
+# archivo: Proyecto/source/scrap_plazos_fijos.py
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import WebDriverException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from sqlalchemy import text
 import time
 import shutil
@@ -30,8 +33,9 @@ except WebDriverException:
     )
 
 driver.get("https://comparatasas.ar/plazos-fijos")
-time.sleep(5)  # Espera a que cargue la página dinámicamente
-
+WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.CSS_SELECTOR, "div.flex-col div.font-medium"))
+)
 # Localizar el contenedor principal de los plazos fijos
 try:
     contenedor = driver.find_element(By.XPATH, "/html/body/div[1]/div/main/div[2]/div/div[2]")
@@ -66,6 +70,14 @@ for p in plazos:
 
 driver.quit()
 print(f"✅ Datos extraídos: {len(data)} filas")
+
+# Filtrar filas sin banco (vacío o None)
+# Filtrar filas sin banco (vacío o None)
+data = [(b, p, t) for (b, p, t) in data if b and b.strip()]
+
+if not data:
+    driver.quit()
+    raise Exception("❌ No se pudo obtener ningún dato de plazos fijos. Reintentá el scraping.")
 
 with engine.begin() as conn:
     conn.execute(text("DROP TABLE IF EXISTS datos_financieros.plazos_fijos"))
