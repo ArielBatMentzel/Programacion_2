@@ -16,6 +16,7 @@ class PlazoFijoInput(BaseModel):
     usuario_username: str
     banco: str
     monto_inicial: float
+    dias: int | None = None
 
 #### Endpoints
 @router.get("/instrumentos/plazos-fijos/bancos")
@@ -48,7 +49,7 @@ def crear_plazo_fijo(data: PlazoFijoInput):
 
         if not row:
             raise HTTPException(status_code=404, detail=f"No existe el banco '{data.banco}'")
-        tasa_tna = row["tasa_pct"]
+        tasa_tna = row[0]
     except HTTPException:
         raise
     except Exception as e:
@@ -70,19 +71,19 @@ def crear_plazo_fijo(data: PlazoFijoInput):
             conn.execute(
                 text("""
                     INSERT INTO instrumentos_usuarios.plazos_fijos_usuarios
-                    (usuario_username, nombre, banco, tasa_pct, monto_inicial,
-                     monto_final_pesos, ganancia_pesos, fecha_calculo)
-                    VALUES (:usuario_username, :nombre, :banco, :tasa_pct, :monto,
-                            :monto_final, :ganancia, NOW())
+                    (usuario_username, banco, monto_inicial, tasa_pct,
+                    monto_final_pesos, dolar_actual, dolar_equilibrio, fecha_calculo)
+                    VALUES (:usuario_username, :banco, :monto_inicial, :tasa_pct, :monto_final_pesos,
+                            :dolar_actual, :dolar_equilibrio, NOW())
                 """),
                 {
                     "usuario_username": data.usuario_username,
-                    "nombre": f"Plazo Fijo {data.banco} {dias}d",
                     "banco": data.banco,
+                    "monto_inicial": data.monto_inicial,
                     "tasa_pct": tasa_tna,
-                    "monto": data.monto_inicial,
-                    "monto_final": resultado["monto_final_pesos"],
-                    "ganancia": resultado["ganancia_pesos"]
+                    "monto_final_pesos": resultado["monto_final_pesos"],
+                    "dolar_actual": None,
+                    "dolar_equilibrio": None
                 }
             )
     except Exception as e:
@@ -98,73 +99,3 @@ def crear_plazo_fijo(data: PlazoFijoInput):
         "monto_inicial": data.monto_inicial,
         "dias": dias
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# @cotizar.post("/instrumentos/plazos-fijos/crear")
-# def crear_plazo_fijo(data: PlazoFijoInput):
-
-#     usuario_id = data.usuario_id
-
-#     # 1) Obtener tasa desde Supabase
-#     result = conn.execute(
-#         text("""
-#             SELECT tasa_pct 
-#             FROM datos_financieros.plazos_fijos 
-#             WHERE banco = :b
-#         """), {"b": data.banco}
-#     ).fetchone()
-
-#     if not result:
-#         raise HTTPException(404, "Banco no encontrado")
-
-#     tasa_tna = result.tasa_pct
-
-#     # 2) Crear objeto real
-#     pf = PlazoFijo(banco=data.banco, tasa_tna=tasa_tna)
-
-#     # 3) Calcular
-#     resultado = pf.calcular_rendimiento(data.monto_inicial)
-
-#     # 4) Guardar
-#     conn.execute(
-#         text("""
-#             INSERT INTO instrumentos_usuarios.plazos_fijos_usuarios
-#             (usuario_id, banco, tasa_pct, monto_inicial, monto_final, ganancia)
-#             VALUES (:u, :b, :t, :m, :f, :g)
-#         """),
-#         {
-#             "u": usuario_id,
-#             "b": data.banco,
-#             "t": tasa_tna,
-#             "m": data.monto_inicial,
-#             "f": resultado["monto_final_pesos"],
-#             "g": resultado["ganancia_pesos"]
-#         }
-#     )
-#     conn.commit()
-
-#     return resultado
