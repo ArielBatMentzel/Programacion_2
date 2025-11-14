@@ -1,7 +1,9 @@
 # archivo: tests/test_instruments.py
 
 import pytest
-from models.instruments import PlazoFijo, Letra, Bono, Pase
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from models.instruments import PlazoFijo, Bono#, Pase, Letra,
 from models.dolar import Dolar
 
 @pytest.fixture

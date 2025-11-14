@@ -8,11 +8,10 @@ import pandas as pd
 from sqlalchemy import text
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.conexion_db import crear_engine
+from utils.conexion_db import engine
 
 # Solo carga el .env si existe (útil localmente, el Render lo ignora)
 # Porque setea sus propias variables de entorno (setea el mismo el DB_URL)
-engine = crear_engine()
 
 
 def _to_float(val):

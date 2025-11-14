@@ -6,9 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.conexion_db import crear_engine
-
-engine = crear_engine()
+from utils.conexion_db import engine
 
 class DataBaseUsuario(AbstractDatabase):
     """

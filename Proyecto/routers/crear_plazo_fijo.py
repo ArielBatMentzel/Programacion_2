@@ -2,14 +2,14 @@ from models.instruments import PlazoFijo
 from pydantic import BaseModel
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.conexion_db import crear_engine
+from utils.conexion_db import engine
+from utils.obtener_ultimo_valor_dolar import obtener_dolar_oficial
 from sqlalchemy import text
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, HTTPException
 
 
 # Inicialización de Variables
 router = APIRouter()
-engine = crear_engine()
 
 # Modelo para trabajar con los datos
 class PlazoFijoInput(BaseModel):
@@ -64,7 +64,14 @@ def crear_plazo_fijo(data: PlazoFijoInput):
         resultado = pf.calcular_rendimiento(data.monto_inicial)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error calculando rendimiento: {e}")
-
+    
+    dolar_actual = obtener_dolar_oficial()
+    if dolar_actual:
+        dolar_equilibrio = round(
+            (resultado["monto_final_pesos"] * dolar_actual) / data.monto_inicial,
+            2
+        )
+        
     # 4) Guardar el registro en instrumentos_usuarios.plazos_fijos_usuarios
     try:
         with engine.begin() as conn:  # begin() hace commit/rollback automáticamente
@@ -82,8 +89,8 @@ def crear_plazo_fijo(data: PlazoFijoInput):
                     "monto_inicial": data.monto_inicial,
                     "tasa_pct": tasa_tna,
                     "monto_final_pesos": resultado["monto_final_pesos"],
-                    "dolar_actual": None,
-                    "dolar_equilibrio": None
+                    "dolar_actual": dolar_actual,
+                    "dolar_equilibrio": dolar_equilibrio
                 }
             )
     except Exception as e:

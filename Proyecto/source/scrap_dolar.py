@@ -11,13 +11,12 @@ import re
 import shutil
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.conexion_db import crear_engine
+from utils.conexion_db import engine
 
 
 print("Iniciando scraping de dólar...")
 
 # CONFIG DB (Supabase via SQLAlchemy)
-engine = crear_engine()
 
 # CONFIGURAR SELENIUM 
 options = Options()

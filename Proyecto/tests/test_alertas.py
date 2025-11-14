@@ -1,6 +1,8 @@
 # archivo: tests/test_alertas.py
 
 import pytest
+import sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.alerta import Alerta
 from models.user import User
 from models.dolar import Dolar
