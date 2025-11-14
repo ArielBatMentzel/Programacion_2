@@ -166,7 +166,7 @@ class PlazoFijo(FixedIncomeInstrument):
 
         return {
             "monto_final_usd_techo": round(monto_final_usd_techo, 2),
-            "dolar_equilibrio": round(dolar_break_even, 2)
+            "dolar_break_even": round(dolar_break_even, 2)
         }
 
 

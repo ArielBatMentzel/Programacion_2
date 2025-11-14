@@ -98,11 +98,12 @@ def crear_plazo_fijo(data: PlazoFijoInput):
 
     # 5) Devolver el resultado completo del cálculo (útil para el frontend)
     return {
+        "banco": data.banco,
         "tna": resultado.get("tna"),
         "tea": resultado.get("tea"),
+        "dias": dias,
+        "monto_inicial": data.monto_inicial,
         "monto_final_pesos": resultado.get("monto_final_pesos"),
         "ganancia_pesos": resultado.get("ganancia_pesos"),
-        "banco": data.banco,
-        "monto_inicial": data.monto_inicial,
-        "dias": dias
+        "dólar equilibrio": dolar_equilibrio
     }
