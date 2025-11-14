@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException
 
 
 # Inicialización de Variables
-router = APIRouter()
+router = APIRouter(prefix="/plazo fijo", tags=["Plazos Fijos"])
 
 # Modelo para trabajar con los datos
 class PlazoFijoInput(BaseModel):
