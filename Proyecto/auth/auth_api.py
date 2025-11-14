@@ -55,34 +55,22 @@ def registrar_usuario(datos: UsuarioCrear):
 
 @router.post("/iniciar_sesion", summary="Iniciar sesión")
 def iniciar_sesion(form_data: OAuth2PasswordRequestForm = Depends()):
-    """
-    Verifica credenciales, genera token JWT y guarda la sesión.
-    """
     from datetime import datetime, timedelta
     from models.user import Session
+    from models.alerta import Alerta
+    from models.instruments import PlazoFijo
+    from models.dolar_subject import DolarSubject
+    from utils.obtener_ultimo_valor_dolar import obtener_dolar_oficial
+    from db_instrumentos import obtener_plazos_fijos_por_usuario
 
     usuario = db_usuarios.buscar_usuario_por_nombre(form_data.username)
+    if not usuario or not verificar_contraseña(form_data.password, usuario["hashed_password"]):
+        raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
-    if not usuario or not verificar_contraseña(
-        form_data.password,
-        usuario["hashed_password"]
-    ):
-        raise HTTPException(
-            status_code=401,
-            detail="Credenciales inválidas"
-        )
-
-    token = crear_token_acceso({
-        "sub": usuario["username"],
-        "tipo": usuario["tipo"]
-    })
-
+    token = crear_token_acceso({"sub": usuario["username"], "tipo": usuario["tipo"]})
     usuario_id = db_usuarios.obtener_id_usuario(usuario["username"])
     if not usuario_id:
-        raise HTTPException(
-            status_code=404,
-            detail="Usuario no encontrado"
-        )
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     sesion = Session(
         token=token,
@@ -92,7 +80,55 @@ def iniciar_sesion(form_data: OAuth2PasswordRequestForm = Depends()):
     )
     db_usuarios.guardar_sesion(sesion)
 
-    return {"access_token": token, "token_type": "bearer"}
+    # ================= ALERTAS =================
+
+    try:
+        subject = DolarSubject()
+        notificaciones = []        
+
+        dolar_actual = obtener_dolar_oficial()
+        subject.set_valor_dolar(dolar_actual)  # ahora sí tiene valor_dolar_actual
+
+        pf_rows = obtener_plazos_fijos_por_usuario(form_data.username)
+
+        for row in pf_rows:
+            instrumento_pf = PlazoFijo.from_supabase_row(row)
+            instrumento_pf.valor_dolar = float(dolar_actual)
+
+            alerta_pf = Alerta(
+                usuario=usuario,
+                instrumento=instrumento_pf,
+                mensaje_ok="Todo bien compadre, el dólar sigue abajo 😎",
+                mensaje_alerta="Ojo compadre, el dólar superó tu equilibrio ⚠️"
+            )
+            subject.registrar(alerta_pf)
+
+            datos_alerta = alerta_pf.update(subject, collect=True)
+
+
+            # Registrar alerta en el Subject
+            subject.registrar(alerta_pf)
+
+            # Ejecutar update y guardar notificación
+            if datos_alerta:
+                notificaciones.append(datos_alerta)
+
+        # Ahora notificamos el subject (ya todas las alertas tienen dolar_actual)
+        subject.set_valor_dolar(dolar_actual)
+
+    except Exception as e:
+        print(f"[ERROR ALERTAS LOGIN] {e}")
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "alertas": notificaciones
+    }
+
+
+
+
+
 
 
 # -------------------------------

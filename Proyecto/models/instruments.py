@@ -141,33 +141,86 @@ class PlazoFijo(FixedIncomeInstrument):
 
     def actualizar(self, valor_dolar: float):
         self.valor_dolar = valor_dolar
-
+        
+        
     def rendimiento_vs_banda(self, monto_inicial: float, mes: str = None):
         """
-        Calcula el rendimiento frente a la banda cambiaria.
+        Calcula métricas frente a la banda cambiaria.
 
-        Args:
-            monto_inicial (float): Monto invertido.
-            mes (str, opcional): Mes de referencia.
+        Devuelve un dict con:
+        - monto_final_usd_techo: cuánto USD equivaldrían los pesos finales si el tipo llega al techo
+        - dolar_break_even: factor_ars * techo (métrica relativa frente al techo)
+        - dolar_equilibrio: EL dólar real de equilibrio (precio máximo del USD para no perder en USD)
 
-        Returns:
-            dict | None: {'monto_final_usd_techo', 'dolar_equilibrio'}
-              o None si no hay techo.
+        Si falta información útil (techo o dólar actual) algunos campos serán None.
         """
-        _, techo = obtener_banda_cambiaria(mes)
+        # Obtener banda (piso, techo)
+        piso, techo = obtener_banda_cambiaria(mes)
         if not techo or techo <= 0:
+            # No hay banda válida
+            techo = None
+
+        # Cálculo del rendimiento del plazo fijo
+        rend = self.calcular_rendimiento(monto_inicial)
+        monto_final_pesos = float(rend["monto_final_pesos"])
+
+        # Evitar división por cero
+        if monto_inicial == 0:
             return None
 
-        rend = self.calcular_rendimiento(monto_inicial)
-        monto_final_pesos = rend["monto_final_pesos"]
+        # Métrica relacionada con la banda (tu cálculo original)
         factor_ars = monto_final_pesos / monto_inicial
-        dolar_break_even = factor_ars * techo
-        monto_final_usd_techo = monto_final_pesos / techo
+        dolar_break_even = None
+        monto_final_usd_techo = None
+        if techo:
+            dolar_break_even = factor_ars * float(techo)
+            monto_final_usd_techo = monto_final_pesos / float(techo)
+
+        # Ahora el VERDADERO dolar_equilibrio:
+        # necesitamos el dolar actual; preferimos usar self.valor_dolar si está,
+        # si no, intentamos obtenerlo desde el helper obtener_dolar_oficial()
+        dolar_actual = getattr(self, "valor_dolar", None)
+        if not dolar_actual:
+            try:
+                from utils.obtener_ultimo_valor_dolar import obtener_dolar_oficial
+                dolar_actual = obtener_dolar_oficial()
+            except Exception:
+                dolar_actual = None
+
+        dolar_equilibrio = None
+        if dolar_actual and monto_inicial:
+            # fórmula: (monto_final_pesos * dolar_actual) / monto_inicial
+            try:
+                dolar_equilibrio = round((monto_final_pesos * float(dolar_actual)) / float(monto_inicial), 2)
+            except Exception:
+                dolar_equilibrio = None
 
         return {
-            "monto_final_usd_techo": round(monto_final_usd_techo, 2),
-            "dolar_break_even": round(dolar_break_even, 2)
+            "monto_final_usd_techo": round(monto_final_usd_techo, 2) if monto_final_usd_techo is not None else None,
+            "dolar_break_even": round(dolar_break_even, 2) if dolar_break_even is not None else None,
+            "dolar_equilibrio": dolar_equilibrio
         }
+
+    @classmethod
+    def from_supabase_row(cls, row: dict):
+
+        instancia = cls(
+            banco=row["banco"],
+            tasa_tna=float(row["tasa_pct"]),   # 👈 A float sí o sí
+            dias=30
+        )
+
+        # Convertir todo lo que venga como Decimal → float
+        instancia.monto_inicial = float(row["monto_inicial"])
+        instancia.dolar_equilibrio = (
+            float(row["dolar_equilibrio"]) if row.get("dolar_equilibrio") else None
+        )
+        instancia.valor_dolar = (
+            float(row["dolar_actual"]) if row.get("dolar_actual") else None
+        )
+
+        return instancia
+
 
 
 # -------------------- Bono --------------------

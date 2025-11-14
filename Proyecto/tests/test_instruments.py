@@ -4,7 +4,7 @@ import pytest
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.instruments import PlazoFijo, Bono#, Pase, Letra,
-from models.dolar import Dolar
+from Proyecto.models.dolar_subject import Dolar
 
 @pytest.fixture
 def dolar():

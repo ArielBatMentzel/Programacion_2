@@ -5,7 +5,7 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from models.alerta import Alerta
 from models.user import User
-from models.dolar import Dolar
+from Proyecto.models.dolar_subject import Dolar
 from models.instruments import PlazoFijo
 
 def test_alerta_evaluar_true():

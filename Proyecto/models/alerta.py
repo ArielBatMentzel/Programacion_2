@@ -1,41 +1,55 @@
-from typing import List
-from models.user import User
-from models.instruments import FixedIncomeInstrument
-from models.dolar import Dolar
-
-
 class Alerta:
     """
-    Representa una alerta que un usuario puede configurar.
-    Evalúa condiciones sobre instrumentos financieros y el dólar,
-    y notifica al usuario cuando se cumplen.
+    Observer del patrón Observer.
+    Cada alerta observa al dólar y decide si la condición se cumple.
     """
 
-    def __init__(self, usuario: User, condicion: str):
-        """
-        Inicializa la alerta.
-        :param usuario: instancia de User que creó la alerta
-        :param condicion: expresión o regla que define cuándo se dispara
-        """
-        self.usuario = usuario
-        self.condicion = condicion
+    def __init__(self, usuario, instrumento, mensaje_ok, mensaje_alerta):
+        self.usuario = usuario              # dict con los datos del usuario
+        self.instrumento = instrumento      # PlazoFijo
+        self.mensaje_ok = mensaje_ok
+        self.mensaje_alerta = mensaje_alerta
 
-    def evaluar(
-        self,
-        dolar: Dolar,
-        instrumentos: List[FixedIncomeInstrument]
-    ) -> bool:
+    def update(self, subject, collect=False):
         """
-        Evalúa si la condición de la alerta se cumple.
-        :param dolar: objeto Dolar con valor actual
-        :param instrumentos: lista de instrumentos a evaluar
-        :return: True si la condición se cumple, False en caso contrario
+        Pull: consultamos al subject para obtener el dólar actual.
         """
-        pass
 
-    def notificar(self):
-        """
-        Notifica al usuario que la condición de la alerta se cumplió.
-        Podría ser un mensaje en pantalla, correo, o registro de log.
-        """
-        pass
+        # 1) Intentamos primero con el subject, si no, usamos el del instrumento
+        dolar_actual = subject.valor_dolar_actual
+        if dolar_actual is None:
+            dolar_actual = getattr(self.instrumento, "valor_dolar", None)
+
+        datos = self.instrumento.rendimiento_vs_banda(
+            monto_inicial=self.instrumento.monto_inicial,
+            mes=None
+        )
+
+        if datos is None:
+            return None
+
+        dolar_equilibrio = datos["dolar_equilibrio"]
+
+        # 2) Si falta info, no comparamos, devolvemos mensaje "neutral"
+        if dolar_actual is None or dolar_equilibrio is None:
+            mensaje = "No se puede calcular alerta"
+        else:
+            mensaje = (
+                self.mensaje_alerta
+                if dolar_actual >= dolar_equilibrio
+                else self.mensaje_ok
+            )
+
+        if collect:
+            return {
+                "mensaje": mensaje,
+                "dolar_actual": dolar_actual,
+                "dolar_equilibrio": dolar_equilibrio,
+                "usuario": self.usuario['username'],
+                "instrumento": self.instrumento.nombre
+            }
+        else:
+            print(
+                f"[NOTIFICACIÓN] Usuario {self.usuario['username']}: "
+                f"{mensaje} | USD actual={dolar_actual}, equilibrio={dolar_equilibrio}"
+            )
