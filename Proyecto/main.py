@@ -7,6 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from fastapi import FastAPI
 from auth.auth_api import router as auth_router
 from routers.crear_plazo_fijo import router as plazo_fijo_router
+from routers.crear_bono import router as bonos_router
 from utils.obtener_ultimo_valor_dolar import obtener_ultimo_valor_dolar
 from fastapi.responses import StreamingResponse
 from io import StringIO
@@ -35,7 +36,7 @@ cotizar = FastAPI(title="CotizAR API")
 
 cotizar.include_router(auth_router) # Registrar router de autenticación
 cotizar.include_router(plazo_fijo_router) # Registrar router de Plazos Fijos
-
+cotizar.include_router(bonos_router) # Registrar router de bonos
 
 #######################################################################
 # Endpoint raíz

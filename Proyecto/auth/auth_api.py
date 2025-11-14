@@ -80,8 +80,8 @@ def iniciar_sesion(form_data: OAuth2PasswordRequestForm = Depends()):
     )
     db_usuarios.guardar_sesion(sesion)
 
-    # ================= ALERTAS =================
 
+    # ================= ALERTAS =================
     try:
         subject = DolarSubject()
         notificaciones = []        

@@ -1,45 +1,72 @@
 # archivo: tests/test_auth.py
-
-import pytest
+# tests/test_auth.py
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import auth.auth_service
-from models.user import User
+import pytest
+from fastapi.testclient import TestClient
 
-@pytest.fixture
-def auth_service():
-    """
-    Fixture que crea un AuthService con un usuario de prueba.
-    Se ejecuta antes de cada test que lo requiera.
-    """
-    service = AuthService()
-    # Creamos un usuario de prueba y lo guardamos en la base
-    user = User(email="test@example.com", nombre="Test User", tipo="normal")
-    service.db.guardar_usuario(user)  # suponiendo que AuthService tiene atributo db: DataBaseUsuario
-    return service
+from auth.auth_api import router as auth_router
+from fastapi import FastAPI
 
-def test_login_valido(auth_service):
-    """
-    Verifica que el login con credenciales correctas genere un token válido.
-    """
-    token = auth_service.login(email="test@example.com", contraseña="dummy")
-    
-    # El token no debe ser None
-    assert token is not None
-    # El token debe ser un string
-    assert isinstance(token, str)
+# Creamos una app temporal solo para test
+app = FastAPI()
+app.include_router(auth_router)
 
-def test_login_invalido(auth_service):
-    """
-    Verifica que el login con credenciales incorrectas devuelva None.
-    """
-    token = auth_service.login(email="noexiste@example.com", contraseña="dummy")
-    assert token is None
+client = TestClient(app)
 
-def test_recuperar_contrasena(auth_service):
-    """
-    Verifica que la recuperación de contraseña se ejecute correctamente.
-    Dependiendo de la implementación puede devolver True/False o simular envío de email.
-    """
-    resultado = auth_service.recuperar_contrasena(email="test@example.com")
-    assert isinstance(resultado, bool)
+def test_registrar_y_login_usuario():
+    # Registrar
+    response = client.post("/auth/registrar", json={
+        "nombre_usuario": "testuser",
+        "contraseña": "123456",
+        "nombre_completo": "Test User",
+        "email": "test@test.com",
+        "telefono": "0"
+    })
+    assert response.status_code in (201, 400)  # 400 si ya existe
+
+    # Login
+    response = client.post("/auth/iniciar_sesion", data={
+        "username": "testuser",
+        "password": "123456"
+    })
+    assert response.status_code == 200
+    assert "access_token" in response.json()
+
+
+def test_usuario_actual():
+    # Primero login para obtener token
+    response = client.post("/auth/iniciar_sesion", data={
+        "username": "testuser",
+        "password": "123456"
+    })
+    assert response.status_code == 200
+    token = response.json()["access_token"]
+
+    # Consultar usuario actual
+    response = client.get(
+        "/auth/usuario_actual",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["nombre_usuario"] == "testuser"
+    assert "tipo" in data
+
+
+def test_cerrar_sesion():
+    # Login para obtener token
+    response = client.post("/auth/iniciar_sesion", data={
+        "username": "testuser",
+        "password": "123456"
+    })
+    token = response.json()["access_token"]
+
+    # Cerrar sesión
+    response = client.post(
+        "/auth/cerrar_sesion",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 200
+    assert "mensaje" in response.json()
+
