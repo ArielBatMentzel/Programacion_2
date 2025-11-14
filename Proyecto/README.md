@@ -65,61 +65,72 @@ pip freeze > requirements.txt
 ## Estructura del Proyecto
 ```text
 Proyecto/
-│
-├── .dockerignore
-├── .env
-├── Dockerfile
-├── main.py
-├── README.md
-├── requirements.txt
-├── auth/
-│   ├── auth_api.py
-│   ├── auth_service.py
-│   └── __init__.py
-├── datasets/
-│   ├── bandas_nov2025_dic2028.csv
-│   ├── bonos_argentinos_vencimiento.csv
-│   └── letras_argentinas_vencimiento.csv
-├── db/
-│   └── abstract_db.py
-├── datos_financieros/
-│   ├── crear_db_financieros_local.py
-│   ├── datos_financieros.db
-│   └── __init__.py
-├── usuarios/
-│   ├── crear_admin.py
-│   ├── crear_db_usuarios_local.py
-│   ├── users_db.py
-│   └── usuarios.db
-├── factory/
-│   ├── fixed_income_factory.py
-│   └── __init__.py
-├── models/
-│   ├── alerta.py
-│   ├── dolar.py
-│   ├── instruments.py
-│   ├── user.py
-│   └── __init__.py
-├── source/
-│   ├── scrap_all.py
-│   ├── scrap_bandas_cambiarias.py
-│   ├── scrap_bono.py
-│   ├── scrap_dolar.py
-│   ├── scrap_letras.py
-│   └── scrap_plazos_fijos.py
-├── tests/
-│   ├── test_alertas.py
-│   ├── test_auth.py
-│   └── test_instruments.py
-└── utils/
-    ├── armar_estructura_txt.py
-    ├── conexion_db.py
-    ├── helpers.py
-    ├── init_path.py
-    ├── obtener_banda_cambiaria.py
-    ├── obtener_ultimo_valor_dolar.py
-    ├── scrapper.py
-    └── __init__.py
+    .dockerignore
+    .env
+    Dockerfile
+    main.py
+    README.md
+    requirements.txt
+auth/
+        auth_api.py
+        auth_service.py
+        __init__.py
+codigo_local/
+        scrap_bandas_cambiarias_db_local.py
+        scrap_bono_db_local.py
+        scrap_dolar_db_local.py
+        scrap_letras_db_local.py
+        scrap_plazos_fijos_db_local.py
+        users_db_local.py
+datasets/
+        bandas_nov2025_dic2028.csv
+        bonos_argentinos_vencimiento.csv
+        letras_argentinas_vencimiento.csv
+db/
+        abstract_db.py
+datos_financieros/
+            crear_db_financieros_local.py
+            datos_financieros.db
+            __init__.py
+usuarios/
+            crear_admin.py
+            crear_db_usuarios_local.py
+            users_db.py
+            usuarios.db
+            __init__.py
+factory/
+        fixed_income_factory.py
+        __init__.py
+models/
+        alerta.py
+        dolar_subject.py
+        instruments.py
+        user.py
+        __init__.py
+routers/
+        crear_bono.py
+        crear_plazo_fijo.py
+        dolar.py
+source/
+        scrap_bandas_cambiarias.py
+        scrap_bono.py
+        scrap_dolar.py
+        scrap_letras.py
+        scrap_plazos_fijos.py
+tests/
+        test_auth.py
+        test_instruments.py
+utils/
+        armar_estructura_txt.py
+        conexion_db.py
+        helpers.py
+        init_path.py
+        obtener_banda_cambiaria.py
+        obtener_bonos.py
+        obtener_pf_usuario.py
+        obtener_ultimo_valor_dolar.py
+        scrap_runner.py
+        __init__.py
 ```
 
 ---
