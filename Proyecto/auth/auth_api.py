@@ -61,7 +61,7 @@ def iniciar_sesion(form_data: OAuth2PasswordRequestForm = Depends()):
     from models.instruments import PlazoFijo
     from models.dolar_subject import DolarSubject
     from utils.obtener_ultimo_valor_dolar import obtener_dolar_oficial
-    from db_instrumentos import obtener_plazos_fijos_por_usuario
+    from Proyecto.utils.obtener_pf_usuario import obtener_plazos_fijos_por_usuario
 
     usuario = db_usuarios.buscar_usuario_por_nombre(form_data.username)
     if not usuario or not verificar_contraseña(form_data.password, usuario["hashed_password"]):

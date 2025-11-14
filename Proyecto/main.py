@@ -14,8 +14,8 @@ from routers.dolar import router as dolar_router
 API CotizAR
 -----------
 
-Para iniciar el servidor:
-    uvicorn main:cotizar --reload
+Para iniciar el servidor localmente:
+    uvicorn main:cotizar 
 
 http://127.0.0.1:8000/docs
 

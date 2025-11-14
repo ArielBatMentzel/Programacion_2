@@ -37,12 +37,15 @@ factory/
         __init__.py
 models/
         alerta.py
-        dolar.py
+        dolar_subject.py
         instruments.py
         user.py
         __init__.py
+routers/
+        crear_bono.py
+        crear_plazo_fijo.py
+        dolar.py
 source/
-        scrap_all.py
         scrap_bandas_cambiarias.py
         scrap_bono.py
         scrap_dolar.py
@@ -58,6 +61,8 @@ utils/
         helpers.py
         init_path.py
         obtener_banda_cambiaria.py
+        obtener_bonos.py
+        obtener_pf_usuario.py
         obtener_ultimo_valor_dolar.py
-        scrapper.py
+        scrap_runner.py
         __init__.py
