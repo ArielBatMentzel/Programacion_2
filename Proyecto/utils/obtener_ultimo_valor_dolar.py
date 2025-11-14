@@ -1,9 +1,7 @@
 from sqlalchemy import text, create_engine
 from utils.scrapper import scrap
 import utils.init_path
-from utils.conexion_db import crear_engine
-
-engine = crear_engine()
+from utils.conexion_db import engine
 
 
 def obtener_ultimo_valor_dolar(tipo: str = "DÓLAR BLUE") -> float:

@@ -1,6 +1,9 @@
 # main.py
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.conexion_db import engine
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from fastapi import FastAPI
 from auth.auth_api import router as auth_router
 from routers.crear_plazo_fijo import router as plazo_fijo_router
@@ -9,10 +12,6 @@ from fastapi.responses import StreamingResponse
 from io import StringIO
 import pandas as pd
 import asyncio
-from utils.conexion_db import crear_engine
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
-
 
 """
 API CotizAR
@@ -36,11 +35,6 @@ cotizar = FastAPI(title="CotizAR API")
 
 cotizar.include_router(auth_router) # Registrar router de autenticación
 cotizar.include_router(plazo_fijo_router) # Registrar router de Plazos Fijos
-
-# Crear engine de conexión a Supabase
-engine = crear_engine()
-
-
 
 
 #######################################################################

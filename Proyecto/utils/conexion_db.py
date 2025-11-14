@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine
 
 load_dotenv()
 try:
