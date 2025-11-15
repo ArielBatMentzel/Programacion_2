@@ -1,5 +1,11 @@
+"""
+Definición de la interfaz de la fábrica abstracta y su 
+implementación concreta para la creación de instrumentos 
+financieros de renta fija.
+"""
+
 from abc import ABC, abstractmethod
-from models.instruments import FixedIncomeInstrument, Bono, Letra, PlazoFijo
+from models.instruments import FixedIncomeInstrument, Bono, PlazoFijo
 from typing import Optional
 
 
@@ -46,11 +52,10 @@ class FixedIncomeInstrumentFactory(FinancialInstrumentFactory):
         tipo = tipo.lower()
         if tipo == "bono":
             return Bono(nombre=nombre, moneda=moneda, **kwargs)
-        elif tipo == "letra":
-            return Letra(nombre=nombre, moneda=moneda, **kwargs)
+        # A futuro
+        # elif tipo == "letra": 
+        #     return Letra(nombre=nombre, moneda=moneda, **kwargs) 
         elif tipo == "plazo_fijo":
             return PlazoFijo(nombre=nombre, moneda=moneda, **kwargs)
-        # elif tipo == "pase":
-        #     return Pase(nombre=nombre, moneda=moneda, **kwargs)
         else:
             return None

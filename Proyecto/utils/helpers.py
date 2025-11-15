@@ -1,10 +1,8 @@
-# archivo: utils/helpers.py
-
 """
 Funciones auxiliares del proyecto.
 Incluye utilidades para cálculos financieros, formateo de datos y validaciones.
-"""
 
+"""
 from typing import List, Dict
 
 

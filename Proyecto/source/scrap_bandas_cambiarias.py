@@ -1,11 +1,17 @@
+"""
+Este script lee un archivo CSV con datos de bandas cambiarias
+y reemplaza la tabla correspondiente en Supabase, eliminando 
+los datos existentes e insertando los nuevos. 
+Realiza la conversión de valores numéricos y reinicia la 
+secuencia de IDs si es necesario.
+"""
+
 import pandas as pd
 from sqlalchemy import text
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.conexion_db import engine
 
-# Solo carga el .env si existe (útil localmente, el Render lo ignora)
-# Porque setea sus propias variables de entorno (setea el mismo el DB_URL)
 
 def _to_float(val):
     """
@@ -126,6 +132,7 @@ def reemplazar_tabla_bandas_con_csv(
         "filas_insertadas": len(df),
         "csv": os.path.abspath(csv_path)
     }    
+
 
 # --- Ejecutar directo ---
 if __name__ == "__main__":

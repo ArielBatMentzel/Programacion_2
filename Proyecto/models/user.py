@@ -1,13 +1,6 @@
-# archivo: models/user.py
-
 from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel, Field, EmailStr
-
-
-# ================================================================
-# PRIMEROS MODELOS SIMPLES
-# ================================================================
 
 class User:
     """
@@ -75,9 +68,9 @@ class Session:
         self.fecha_expiracion = fecha_expiracion
 
 
-# ================================================================
+# -------------------------------
 # MODELOS Pydantic (USADOS EN LA API / VALIDACIÓN DE DATOS)
-# ================================================================
+# -------------------------------
 
 class UsuarioCrear(BaseModel):
     """

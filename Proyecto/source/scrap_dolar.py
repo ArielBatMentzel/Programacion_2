@@ -1,4 +1,9 @@
-# archivo: Proyecto/source/scrap_dolar.py
+"""
+Este script extrae las cotizaciones del dólar desde la web 
+"dolarhoy.com" usando Selenium, limpia y procesa los datos, 
+y luego los guarda en la tabla 'dolar' de Supabase.
+"""
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -14,10 +19,7 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.conexion_db import engine
 
-
 print("Iniciando scraping de dólar...")
-
-# CONFIG DB (Supabase via SQLAlchemy)
 
 # CONFIGURAR SELENIUM 
 options = Options()
@@ -70,6 +72,7 @@ bloques = wait.until(
         (By.CSS_SELECTOR, "div.tile.is-child, div.tile.is-child.only-mobile")
     )
 )
+
 
 def limpiar_numero(valor):
     """

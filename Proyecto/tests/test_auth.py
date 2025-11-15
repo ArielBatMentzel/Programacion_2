@@ -1,10 +1,15 @@
-# archivo: tests/test_auth.py
-# tests/test_auth.py
+"""
+Pruebas automatizadas para el flujo de autenticación de usuarios: 
+registro, 
+inicio de sesión, 
+obtención del usuario actual ,
+cierre de sesión.
+"""
+
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pytest
 from fastapi.testclient import TestClient
-
 from auth.auth_api import router as auth_router
 from fastapi import FastAPI
 
@@ -13,6 +18,7 @@ app = FastAPI()
 app.include_router(auth_router)
 
 client = TestClient(app)
+
 
 def test_registrar_y_login_usuario():
     # Registrar

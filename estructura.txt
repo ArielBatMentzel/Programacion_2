@@ -52,7 +52,6 @@ source/
         scrap_letras.py
         scrap_plazos_fijos.py
 tests/
-        test_alertas.py
         test_auth.py
         test_instruments.py
 utils/

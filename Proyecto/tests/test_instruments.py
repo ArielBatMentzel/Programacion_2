@@ -1,30 +1,20 @@
-# archivo: tests/test_instruments.py
-import sys
-import os
-
-# Agrega la carpeta raíz del proyecto al path para que se puedan importar los módulos
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-# archivo: Proyecto/tests/test_instruments_completo.py
-
-'''
-
+"""
+Pruebas unitarias para las clases PlazoFijo y Bono.
+Verifica el correcto cálculo de rendimientos, actualizaciones 
+de valor del dólar y comparaciones con bandas cambiarias. 
+También prueba la conversión de valores y el cálculo de 
+rendimientos anuales y mensuales.
+Se ejecuta haciendo: 
 Desde Programacion_2
-
 pytest Proyecto/tests/test_intruments.py -v 
-
-'''
-
+"""
 
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from datetime import date, timedelta
-
-
 from unittest.mock import patch
 import pytest
-
 from models.instruments import PlazoFijo, Bono, _mes_banda_de_salida
 
 # -------------------- Funciones auxiliares --------------------
@@ -56,10 +46,12 @@ def test_plazo_fijo_calcular_rendimiento():
     assert resultado["monto_final_pesos"] > 10000
     assert resultado["ganancia_pesos"] > 0
 
+
 def test_plazo_fijo_actualizar_valor_dolar():
     pf = PlazoFijo("Banco Test", tasa_tna=60)
     pf.actualizar(420)
     assert pf.valor_dolar == 420
+
 
 def test_plazo_fijo_rendimiento_vs_banda():
     pf = PlazoFijo("Banco Test", tasa_tna=60, dias=30)
@@ -81,14 +73,21 @@ def test_plazo_fijo_rendimiento_vs_banda():
     (123, 123.0),
     ("abc", None)
 ])
+
+
 def test_bono_to_float(valor, esperado):
+    """
+    Verifica la conversión de diferentes valores a float en un bono.
+    """
     bono = Bono("Bono Test", "ARS")
     assert bono._to_float(valor) == esperado
+
 
 def test_bono_estimacion_rend_anual():
     bono = Bono("Bono Test", "ARS", dia_pct=0.1, mes_pct=3, anio_pct=10)
     r_anual = bono._estimacion_rend_anual()
     assert r_anual > 0
+
 
 def test_bono_calcular_rendimiento_ars():
     bono = Bono("Bono Test", "ARS", dia_pct=0.1, mes_pct=3, anio_pct=10)
@@ -101,12 +100,14 @@ def test_bono_calcular_rendimiento_ars():
     assert resultado["r_anual_pct"] > 0
     assert "usd_invertidos" in resultado
 
+
 def test_bono_calcular_rendimiento_usd():
     bono = Bono("Bono Test", "USD", dia_pct=0.1, mes_pct=3, anio_pct=10)
     resultado = bono.calcular_rendimiento(10000)
     assert "r_mensual_pct" in resultado
     assert "r_anual_pct" in resultado
     assert "usd_invertidos" not in resultado
+
 
 def test_bono_rendimiento_vs_banda_normal():
     bono = Bono("Bono Test", "ARS", dia_pct=0.1, mes_pct=3, anio_pct=10)
@@ -117,6 +118,7 @@ def test_bono_rendimiento_vs_banda_normal():
     assert resultado is not None
     assert "monto_final_usd_techo" in resultado
     assert resultado["monto_final_usd_techo"] > 0
+
 
 def test_bono_rendimiento_vs_banda_sin_banda():
     bono = Bono("Bono Test", "ARS", dia_pct=0.1, mes_pct=3, anio_pct=10)

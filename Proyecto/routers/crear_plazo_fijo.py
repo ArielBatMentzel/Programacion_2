@@ -1,3 +1,9 @@
+"""
+Rutas para obtener información y calcular plazos fijos, incluyendo 
+tasas, rendimientos y comparación con el dólar actual.
+También permite crear registros de plazos fijos para los usuarios.
+"""
+
 from models.instruments import PlazoFijo
 from pydantic import BaseModel
 import sys, os
@@ -6,7 +12,6 @@ from utils.conexion_db import engine
 from utils.obtener_ultimo_valor_dolar import obtener_dolar_oficial
 from sqlalchemy import text
 from fastapi import APIRouter, HTTPException
-
 
 # Inicialización de Variables
 router = APIRouter(prefix="/plazo fijo", tags=["Plazos Fijos"])
@@ -18,7 +23,12 @@ class PlazoFijoInput(BaseModel):
     monto_inicial: float
     dias: int | None = None
 
-#### Endpoints
+
+# -------------------------------
+# Endpoints (métodos que manejan solicitudes HTTP)
+# -------------------------------
+
+
 @router.get("/instrumentos/plazos-fijos/bancos")
 def obtener_bancos():
     try:

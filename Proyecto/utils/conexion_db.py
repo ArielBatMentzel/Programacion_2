@@ -1,3 +1,10 @@
+"""
+Carga las variables de entorno desde un archivo .env 
+y configura una conexión a la base de datos.
+Se fuerza el uso de IPV4, única forma de conexión 
+actual cuando trabajamos con el modo gratuito de Supabase.
+"""
+
 from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine

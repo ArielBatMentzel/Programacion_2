@@ -1,4 +1,10 @@
-# routers/bonos.py
+"""
+Rutas (de bonos) para calcular el rendimiento de bonos y compararlos
+con la banda cambiaria. 
+Calcula el rendimiento en función del monto invertido y la 
+moneda seleccionada, y guarda los resultados en la base de datos.
+"""
+
 from fastapi import APIRouter, Query
 from datetime import date
 from typing import List, Dict
@@ -6,9 +12,10 @@ from sqlalchemy import text
 from models.instruments import Bono
 from utils.obtener_bonos import obtener_bonos_desde_bd, obtener_tipo_cambio
 from utils.obtener_banda_cambiaria import obtener_banda_cambiaria
-from utils.conexion_db import engine  # usar el engine directamente
+from utils.conexion_db import engine  
 
 router = APIRouter(prefix="/bonos", tags=["Bonos"])
+
 
 @router.get("/calcular", summary="Calcular rendimiento de bonos")
 async def calcular_bonos(

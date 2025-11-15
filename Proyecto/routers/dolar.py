@@ -1,3 +1,10 @@
+"""
+Rutas para obtener información sobre el valor del dólar, incluyendo:
+- Dólar oficial actual.
+- Cotizaciones históricas almacenadas en la base de datos.
+- Exportación de cotizaciones históricas a un archivo CSV.
+"""
+
 from fastapi import APIRouter
 from utils.obtener_ultimo_valor_dolar import obtener_ultimo_valor_dolar
 from fastapi.responses import StreamingResponse
@@ -10,9 +17,18 @@ from io import StringIO
 
 router = APIRouter(prefix="/dolar", tags=["Dólar"])
 
-# GET /dolar/
+
+# -------------------------------
+# Endpoints 
+# -------------------------------
+
+
 @router.get("/")
 async def mostrar_dolar_oficial_hoy():
+    """
+    Obtiene el valor del dólar oficial actual.
+    """
+    
     loop = asyncio.get_running_loop()
     try:
         valor = await loop.run_in_executor(None, obtener_ultimo_valor_dolar)
@@ -20,11 +36,16 @@ async def mostrar_dolar_oficial_hoy():
     except Exception as e:
         return {"error": str(e)}
 
-# GET /dolar/cotizaciones
+
 @router.get("/cotizaciones")
 async def mostrar_cotizaciones():
+    """
+    Obtiene todas las cotizaciones actuales de distintos 
+    tipos de dólares almacenados en la base de datos y 
+    los devuelve como diccionarios.
+    """
+    
     loop = asyncio.get_running_loop()
-
     def obtener_datos():
         try:
             with engine.connect() as conn:
@@ -39,12 +60,16 @@ async def mostrar_cotizaciones():
     except Exception as e:
         return {"error": str(e)}
 
-# GET /dolar/exportar
+
 @router.get("/exportar")
 async def exportar_csv():
+    """
+    Exporta las cotizaciones de distintos actuales de 
+    distintos tipos de dólares desde la base de datos a
+    un archivo CSV y lo devuelv para ser descargado.
+    """
 
     loop = asyncio.get_running_loop()
-
     def exportar():
         try:
             with engine.connect() as conn:

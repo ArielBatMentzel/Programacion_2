@@ -1,7 +1,7 @@
-# utils/obtener_bonos.py
 from sqlalchemy import text
 from typing import List, Dict, Any
-from utils.conexion_db import engine  # usamos el engine directamente
+from utils.conexion_db import engine 
+
 
 def obtener_bonos_desde_bd(moneda: str = None) -> List[Dict[str, Any]]:
     """

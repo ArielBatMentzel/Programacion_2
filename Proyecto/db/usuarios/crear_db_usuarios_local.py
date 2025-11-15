@@ -1,5 +1,10 @@
+"""
+Script para crear la base "usuarios" localmente.
+"""
+
 import sqlite3
 from pathlib import Path
+
 
 RUTA_DB = Path(__file__).resolve().parent.parent / "usuarios" / "usuarios.db"
 
@@ -30,3 +35,5 @@ with sqlite3.connect(RUTA_DB) as conn:
         )
     """)
     conn.commit()
+    
+print("Base de datos creada vacía:", RUTA_DB)

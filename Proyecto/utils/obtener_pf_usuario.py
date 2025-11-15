@@ -1,6 +1,6 @@
-# db_instrumentos.py
 from utils.conexion_db import engine
 from sqlalchemy import text
+
 
 def obtener_plazos_fijos_por_usuario(usuario_username: str):
     """

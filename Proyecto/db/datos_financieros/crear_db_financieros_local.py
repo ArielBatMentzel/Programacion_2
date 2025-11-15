@@ -1,13 +1,18 @@
+"""
+Script para crear la base "datos_financieros" localmente.
+"""
+
 import sqlite3
 import os
+from pathlib import Path
 
-db_path = "Proyecto/db/datos_financieros/datos_financieros.db"
+
+RUTA_DB = Path(__file__).resolve().parent.parent / "datos_financieros" / "datos_financieros.db"
 
 # Crear carpeta si no existe
-os.makedirs(os.path.dirname(db_path), exist_ok=True)
+os.makedirs(os.path.dirname(RUTA_DB), exist_ok=True)
 
-# Crear la base vacía
-conn = sqlite3.connect(db_path)
+conn = sqlite3.connect(RUTA_DB) # Crear la base vacía
 conn.close()
 
-print("✅ Base de datos creada vacía:", db_path)
+print("Base de datos creada vacía:", RUTA_DB)

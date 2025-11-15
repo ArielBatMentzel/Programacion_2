@@ -1,15 +1,13 @@
-# crear_admin.py
+"""
+Script para crear un usuario administrador en Supabase.
+"""
+
 import os, sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.conexion_db import crear_engine
 import bcrypt
 from sqlalchemy import text
-"""
-Script seguro para crear un usuario administrador en Supabase.
 
-Uso:
-    python crear_admin.py
-"""
 
 # Configuración del admin
 USERNAME_ADMIN = "admin"
@@ -20,15 +18,14 @@ EMAIL_ADMIN = "admin@admin.com"
 TELEFONO_ADMIN = 0
 ROL_ADMIN = "admin"
 
-# Hashear la contraseña
+# Hasheamos la contraseña
 password_bytes = PASSWORD_ADMIN.encode("utf-8")
 hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
 
-# Crear engine de conexión
+# Creamos el engine de conexión
 engine = crear_engine()
 
-
-# Insertar o reemplazar admin en la tabla usuarios
+# Insertamos o reemplazamos el admin en la tabla usuarios
 try:
     with engine.connect() as conn:
         query = text("""
