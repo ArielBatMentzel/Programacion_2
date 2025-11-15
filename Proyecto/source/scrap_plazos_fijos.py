@@ -1,4 +1,10 @@
-# archivo: Proyecto/source/scrap_plazos_fijos.py
+"""
+Este script realiza un scraping de los datos de plazos 
+fijos desde el sitio 'comparatasas.ar', extrae el banco, 
+el plazo y la tasa de interés, y guarda la información en 
+la tabla 'plazos_fijos' de Supabase.
+"""
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service

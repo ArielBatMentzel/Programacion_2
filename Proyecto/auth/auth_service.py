@@ -6,12 +6,9 @@ from fastapi.security import OAuth2PasswordBearer
 from db.usuarios.users_db import DataBaseUsuario
 from models.user import UsuarioPublico
 
-# ======================
-# CONFIGURACIÓN GENERAL
-# ======================
-
-CLAVE_SECRETA = "perro_chancho_unsam_2025_!9xM4"
-# La Clave Secreta NO debe compartirse ni subirse a Github
+# No debería compartirse la clave
+CLAVE_SECRETA = "perro_chancho_unsam_2025_!9xM4" 
+# No debería compartirse la clave
 ALGORITMO = "HS256"
 MINUTOS_EXPIRACION_TOKEN = 60
 
@@ -21,10 +18,10 @@ contexto_hash = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # OAuth2 indica que el token se obtendrá desde /auth/iniciar_sesion
 esquema_oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/iniciar_sesion")
 
-# ======================
-# FUNCIONES DE SEGURIDAD
-# ======================
 
+# -------------------------------
+# FUNCIONES DE SEGURIDAD
+# -------------------------------
 
 def crear_hash_contraseña(contraseña: str) -> str:
     """Genera un hash seguro de la contraseña ingresada."""
@@ -40,10 +37,9 @@ def verificar_contraseña(contraseña_plana: str,
     return contexto_hash.verify(contraseña_plana, contraseña_hasheada)
 
 
-# ======================
+# -------------------------------
 # FUNCIONES PARA TOKENS JWT
-# ======================
-
+# -------------------------------
 
 def crear_token_acceso(datos: dict, duracion: timedelta | None = None):
     """Crea un token JWT firmado con una fecha de expiración."""

@@ -1,3 +1,9 @@
+"""
+Este script genera un archivo de texto con la estructura de 
+carpetas y archivos de un directorio. 
+Ignorando carpetas específicas como ".venv", "venv" y "__pycache__".
+"""
+
 import os
 
 # Carpeta raíz que quieres explorar

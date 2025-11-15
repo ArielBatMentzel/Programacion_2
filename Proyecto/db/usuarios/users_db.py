@@ -1,4 +1,3 @@
-# archivo: db/usuarios/users_db.py
 from typing import Optional, List
 from models.user import User, Session
 from db.abstract_db import AbstractDatabase
@@ -8,9 +7,10 @@ import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.conexion_db import engine
 
+
 class DataBaseUsuario(AbstractDatabase):
     """
-    Maneja la persistencia de usuarios y sesiones.
+    Gestiona la persistencia de usuarios y sesiones.
     Hereda de AbstractDatabase y cumple la interfaz común.
     """
 
@@ -43,10 +43,9 @@ class DataBaseUsuario(AbstractDatabase):
             """))
 
 
-    # ========================================================
+    # -------------------------------
     # FUNCIONES DE ALTO NIVEL PARA AUTH_SERVICE Y AUTH_API
-    # ========================================================
-
+    # -------------------------------
 
     def crear_usuario(self, 
                       nombre_usuario: str, 
@@ -89,10 +88,9 @@ class DataBaseUsuario(AbstractDatabase):
             return fila[0] if fila else None
 
 
-    # ==============================
+    # -------------------------------
     # MÉTODOS DE USUARIOS
-    # ==============================
-
+    # -------------------------------
 
     def guardar(self, usuario: User):
         """Guarda un usuario nuevo desde modelo User."""
@@ -136,10 +134,9 @@ class DataBaseUsuario(AbstractDatabase):
         return usuarios_encontrados
     
 
-    # ==============================
+    # -------------------------------
     # MÉTODOS DE ACTUALIZACIÓN DE USUARIOS
-    # ==============================
-
+    # -------------------------------
 
     def actualizar_campo(self, id_usuario: int, campo: str, valor) -> bool:
         """
@@ -176,10 +173,9 @@ class DataBaseUsuario(AbstractDatabase):
         return campos_actualizados > 0
 
 
-    # ==============================
+    # -------------------------------
     # MÉTODOS DE SESIONES
-    # ==============================
-
+    # -------------------------------
         
     def guardar_sesion(self, sesion: Session) -> bool:
         """Guarda una sesión activa."""

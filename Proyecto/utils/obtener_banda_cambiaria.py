@@ -1,4 +1,3 @@
-# utils/obtener_banda_cambiaria.py
 from sqlalchemy import text
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

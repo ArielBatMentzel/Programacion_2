@@ -1,6 +1,6 @@
 class Alerta:
     """
-    Observer del patrón Observer.
+    Observer (patrón Observer).
     Cada alerta observa al dólar y decide si la condición se cumple.
     """
 
@@ -12,7 +12,8 @@ class Alerta:
 
     def update(self, subject, collect=False):
         """
-        Pull: consultamos al subject para obtener el dólar actual.
+        Consulta al Subject para obtener el valor del 
+        dólar actual (modelo pull).
         """
 
         # 1) Intentamos primero con el subject, si no, usamos el del instrumento
@@ -30,7 +31,7 @@ class Alerta:
 
         dolar_equilibrio = datos["dolar_equilibrio"]
 
-        # 2) Si falta info, no comparamos, devolvemos mensaje "neutral"
+        # 2) Si falta info devolvemos mensaje "neutral"
         if dolar_actual is None or dolar_equilibrio is None:
             mensaje = "No se puede calcular alerta"
         else:

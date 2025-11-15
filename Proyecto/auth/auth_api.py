@@ -1,5 +1,3 @@
-# api/auth_api.py
-
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from auth.auth_service import (
@@ -18,6 +16,7 @@ from models.dolar_subject import DolarSubject
 from utils.obtener_ultimo_valor_dolar import obtener_dolar_oficial
 from utils.obtener_pf_usuario import obtener_plazos_fijos_por_usuario
 
+# Inicialización de variables
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 db_usuarios = DataBaseUsuario()
 

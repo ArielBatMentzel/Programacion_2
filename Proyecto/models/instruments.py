@@ -1,5 +1,3 @@
-# archivo: Proyecto/models/instruments.py
-
 from abc import ABC, abstractmethod
 from datetime import date, timedelta
 import sys, os
@@ -111,7 +109,6 @@ class PlazoFijo(FixedIncomeInstrument):
         self.dias = dias
         self.tasa_tna = tasa_tna
 
-
     def calcular_rendimiento(
             self, monto_inicial: float, tipo_cambio_actual: float = None
             ):
@@ -142,7 +139,6 @@ class PlazoFijo(FixedIncomeInstrument):
     def actualizar(self, valor_dolar: float):
         self.valor_dolar = valor_dolar
         
-        
     def rendimiento_vs_banda(self, monto_inicial: float, mes: str = None):
         """
         Calcula métricas frente a la banda cambiaria.
@@ -168,7 +164,7 @@ class PlazoFijo(FixedIncomeInstrument):
         if monto_inicial == 0:
             return None
 
-        # Métrica relacionada con la banda (tu cálculo original)
+        # Métrica relacionada con la banda
         factor_ars = monto_final_pesos / monto_inicial
         dolar_break_even = None
         monto_final_usd_techo = None
@@ -176,8 +172,7 @@ class PlazoFijo(FixedIncomeInstrument):
             dolar_break_even = factor_ars * float(techo)
             monto_final_usd_techo = monto_final_pesos / float(techo)
 
-        # Ahora el VERDADERO dolar_equilibrio:
-        # necesitamos el dolar actual; preferimos usar self.valor_dolar si está,
+        # Necesitamos el dolar actual; preferimos usar self.valor_dolar si está,
         # si no, intentamos obtenerlo desde el helper obtener_dolar_oficial()
         dolar_actual = getattr(self, "valor_dolar", None)
         if not dolar_actual:
@@ -203,7 +198,13 @@ class PlazoFijo(FixedIncomeInstrument):
 
     @classmethod
     def from_supabase_row(cls, row: dict):
-
+        """
+        Genera un objeto PlazoFijo a partir de una fila de datos
+        en formato diccionario (como lo que devuelve la base de datos).
+        """
+        
+        # Al usar el decorador classmethod, 
+        # cls representa la misma clase "PlazoFijo" 
         instancia = cls(
             banco=row["banco"],
             tasa_tna=float(row["tasa_pct"]),   # 👈 A float sí o sí
@@ -220,7 +221,6 @@ class PlazoFijo(FixedIncomeInstrument):
         )
 
         return instancia
-
 
 
 # -------------------- Bono --------------------

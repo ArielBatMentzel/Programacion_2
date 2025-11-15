@@ -1,4 +1,9 @@
-# archivo: Proyecto/utils/scrap_runner.py
+"""
+Ejecuta ciertos scrapers de manera concurrente para 
+obtener los datos financieros y que se suban a la 
+base de datos 
+"""
+
 import os
 import sys
 import time
@@ -80,6 +85,7 @@ def scrap(nombres: List[str]):
             ]
         for _ in as_completed(futures):
             pass
+
 
 # Este bloque asegura que el código solo se ejecutará si el script se ejecuta directamente
 if __name__ == "__main__":

@@ -40,6 +40,7 @@ def obtener_ultimo_valor_dolar(tipo: str = "DÓLAR BLUE") -> float:
 
     raise ValueError(f"No se encontró el valor del dólar para el tipo '{tipo}'.")
 
+
 def obtener_dolar_oficial() -> float | None:
     """
     Helper para obtener el último valor del dólar oficial desde la BD.

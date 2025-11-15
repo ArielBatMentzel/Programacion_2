@@ -1,7 +1,8 @@
 """
-Carga los datos de bonos desde CSV a la 
-base de datos de Supabase.
-Elimina las filas existentes y carga las nuevas.
+Este script lee un archivo CSV con datos de bonos
+y reemplaza la tabla correspondiente en Supabase, eliminando 
+los datos existentes e insertando los nuevos. 
+Realiza la conversión de valores numéricos
 """
 
 import pandas as pd
@@ -105,7 +106,6 @@ def reemplazar_tabla_bonos_con_csv(
         "csv": os.path.abspath(csv_path)
     }
     
-
 
 # --- Ejecutar directo ---
 if __name__ == "__main__":
